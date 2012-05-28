@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?eclipse-pydev version="1.0"?>
+
+<pydev_project>
+<pydev_property name="org.python.pydev.PYTHON_PROJECT_INTERPRETER">Default</pydev_property>
+<pydev_property name="org.python.pydev.PYTHON_PROJECT_VERSION">python 2.7</pydev_property>
+<pydev_pathproperty name="org.python.pydev.PROJECT_SOURCE_PATH">
+<path>/Scripts/src</path>
+</pydev_pathproperty>
+<pydev_pathproperty name="org.python.pydev.PROJECT_EXTERNAL_SOURCE_PATH">
+<path>/usr/lib/pymodules/python2.7</path>
+<path>/usr/local/lib/python2.7/dist-packages/PyBrain-0.3-py2.7.egg/pybrain</path>
+<path>/usr/local/lib/python2.7/dist-packages/Pycluster-1.50-py2.7-linux-x86_64.egg</path>
+<path>/usr/local/lib/python2.7/dist-packages</path>
+<path>/usr/local/lib/python2.7/dist-packages/pebl-1.0.2-py2.7-linux-x86_64.egg</path>
+<path>/usr/local/lib/python2.7/dist-packages/pymc</path>
+</pydev_pathproperty>
+</pydev_project>

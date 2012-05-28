@@ -1,0 +1,124 @@
+'''
+Created on Sep 26, 2011
+
+@author: work
+'''
+
+from numpy import array, int32
+from ghmm import *
+import types
+import time
+
+class HMM():
+    '''
+    classdocs
+    '''
+    m = None
+    
+    def __init__(self, fm_train, testinput, testtarget, N, M, max):
+        '''
+        Constructor
+        '''
+        sigma = IntegerRange(0, max+1)
+        A = [[1.0/6]*6]*6
+    #    efairnum = max+1
+    #    efair = [1.0/efairnum]*efairnum
+        S0 = []
+        partition = max/6.0
+        max+=1
+        disc = 1 - (0.00001 * (max-partition))
+    #    print disc
+        for i in range(max):
+            if i < partition:
+                S0.append(disc/partition)
+            else:
+                S0.append(0.00001)
+        S1 = []
+        for i in range(max):
+            if (i >= partition) and (i < 2*partition):
+                S1.append(disc/partition)
+            else:
+                S1.append(0.00001)
+        S2 = []
+        for i in range(max):
+            if (i >= 2*partition) and (i < 3*partition):
+                S2.append(1/max)
+            else:
+                S2.append(0.00001)
+        S3 = []
+        for i in range(max):
+            if (i >= 3*partition) and (i < 4*partition):
+                S3.append(disc/partition)
+            else:
+                S3.append(0.00001)
+        S4 = []
+        for i in range(max):
+            if (i >= 4*partition) and (i < 5*partition):
+                S4.append(disc/partition)
+            else:
+                S4.append(0.00001)
+        S5 = []
+        for i in range(max):
+            if (i >= 5*partition):
+                S5.append(disc/partition)
+            else:
+                S5.append(0.00001)
+    
+        B  = [S0,S1,S2,S3,S4,S5]
+        pi = [1.0/6] * 6
+        self.m = HMMFromMatrices(sigma, DiscreteDistribution(sigma), A, B, pi)
+        train = EmissionSequence(sigma, fm_train)
+        trainstart = time.time()
+        self.m.baumWelch(train)
+        trainend = time.time()
+        print 'HMM train time'
+        print trainend - trainstart
+
+    def hmm_req(self, fm_train, testinput, testtarget, max):
+        sigma = IntegerRange(0, max+1)
+        v = []
+        
+        teststart = time.time()
+        for t in testinput:
+            seq = fm_train[0:t]
+            seq_test = EmissionSequence(sigma, seq)
+            v.append(self.m.viterbi(seq_test))
+        testend = time.time()
+        
+        print "HMM query response"
+        print testend-teststart
+        return v
+    
+    def sme_calc(self, testtarget, realtarget):
+        result = 0.0
+        for i in range(len(testtarget)):
+            dis = min([pow(realtarget[i] - testtarget[i][j], 2) for j in range(len(testtarget[i]))])
+            result += dis
+        return result/len(testtarget[0])
+    
+    def mape_calc(self, testtarget, realtarget):
+        result = 0.0
+        
+        for i in range(len(testtarget)):
+            result += min([abs(testtarget[i][j] - realtarget[i])/testtarget[i] for j in range(len(testtarget[i]))])
+        
+        return result/len(testtarget)
+    
+    def rsqr_calc(self, testtarget, realtarget):
+        result_up = 0.0
+        result_down = 0.0
+        avg = sum(realtarget)/len(realtarget)
+        
+        for i in range(len(testtarget)):
+            result_up += min([pow((realtarget[i] - testtarget[i][j]),2) for j in range(len(testtarget[i]))])
+            result_down += (realtarget[i] - avg)
+        
+        return 1 - (result_up / result_down)
+    
+    def pred_calc(self, testtarget, realtarget, x):
+        countx = 0.0
+        for i in range(len(testtarget)):
+            min_error = min([(testtarget[i][j]/realtarget[i]) - 1 for j in range(len(testtarget[i]))])
+            if (min_error < (realtarget[i] * (1-x))):
+                countx += 1
+        return countx / len(realtarget)

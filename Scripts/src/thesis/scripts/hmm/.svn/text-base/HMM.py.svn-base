@@ -1,0 +1,128 @@
+'''
+Created on Jul 13, 2011
+
+@author: work
+'''
+
+from shogun.Features import ALPHANUM, StringIntFeatures
+from shogun.Distribution import HMM, BW_NORMAL
+from numpy import array, int32
+from ghmm import *
+import types
+import time
+
+def hmm_sg(fm_train, N, M, pseudo, order, gap, reverse, num_examples):
+
+#    charfeat=StringCharFeatures(ALPHANUM)
+#    charfeat.set_features()
+    print len(fm_train)
+    feats = StringIntFeatures(ALPHANUM)
+    feats.set_features(array(fm_train, dtype=int32))
+#    feats=StringWordFeatures(charfeat.get_alphabet())
+#    feats.obtain_from_char(charfeat, order-1, order, gap, reverse)
+
+#    feats = RealFeatures(fm_train)
+    hmm=HMM(feats, N, M, pseudo)
+    hmm.train()
+    hmm.baum_welch_viterbi_train(BW_NORMAL)
+    
+    num_examples=feats.get_num_vectors()
+    num_param=hmm.get_num_model_parameters()
+    for i in xrange(num_examples):
+        for j in xrange(num_param):
+            hmm.get_log_derivative(j, i)
+
+    best_path=0
+    best_path_state=0
+    for i in xrange(num_examples):
+        best_path+=hmm.best_path(i)
+        for j in xrange(N):
+            best_path_state+=hmm.get_best_path_state(i, j)
+            
+    print best_path
+    print best_path_state
+    lik_example = hmm.get_log_likelihood()
+    lik_sample = hmm.get_log_likelihood_sample()
+
+    return lik_example, lik_sample, hmm
+
+def hmm(fm_train, testinput, testtarget, N, M, max):
+    sigma = IntegerRange(0, max+1)
+    A = [[1.0/6]*6]*6
+#    efairnum = max+1
+#    efair = [1.0/efairnum]*efairnum
+    S0 = []
+    partition = max/6.0
+    max+=1
+    disc = 1 - (0.00001 * (max-partition))
+#    print disc
+    for i in range(max):
+        if i < partition:
+            S0.append(disc/partition)
+        else:
+            S0.append(0.00001)
+    S1 = []
+    for i in range(max):
+        if (i >= partition) and (i < 2*partition):
+            S1.append(disc/partition)
+        else:
+            S1.append(0.00001)
+    S2 = []
+    for i in range(max):
+        if (i >= 2*partition) and (i < 3*partition):
+            S2.append(1/max)
+        else:
+            S2.append(0.00001)
+    S3 = []
+    for i in range(max):
+        if (i >= 3*partition) and (i < 4*partition):
+            S3.append(disc/partition)
+        else:
+            S3.append(0.00001)
+    S4 = []
+    for i in range(max):
+        if (i >= 4*partition) and (i < 5*partition):
+            S4.append(disc/partition)
+        else:
+            S4.append(0.00001)
+    S5 = []
+    for i in range(max):
+        if (i >= 5*partition):
+            S5.append(disc/partition)
+        else:
+            S5.append(0.00001)
+
+    B  = [S0,S1,S2,S3,S4,S5]
+    pi = [1.0/6] * 6
+    m = HMMFromMatrices(sigma, DiscreteDistribution(sigma), A, B, pi)
+    train = EmissionSequence(sigma, fm_train)
+    trainstart = time.time()
+    m.baumWelch(train)
+    trainend = time.time()
+    print 'HMM train time'
+    print trainend - trainstart
+    
+    return m
+
+def hmm_req(model, fm_train, testinput, testtarget, max):
+    sigma = IntegerRange(0, max+1)
+    v = []
+    
+    teststart = time.time()
+    for t in testinput:
+        seq = fm_train[0:t]
+        seq_test = EmissionSequence(sigma, seq)
+        v.append(model.viterbi(seq_test))
+    testend = time.time()
+    
+    print "HMM query response"
+    print testend-teststart
+    return v
+
+def sme_calc(testtarget, realtarget):
+    result = 0.0
+    for i in range(len(testtarget)):
+        dis = min([pow(realtarget[i] - testtarget[i][j], 2) for j in range(len(testtarget[i]))])
+        result += dis
+    return result/len(testtarget[0])
+        

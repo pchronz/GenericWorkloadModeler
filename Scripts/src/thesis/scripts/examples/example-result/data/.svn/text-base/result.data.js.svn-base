@@ -1,0 +1,1 @@
+resultdata={"runs": [{"start": "Mon Jul 25 00:33:11 2011", "host": "work-mint", "runtime": 0.001, "end": "Mon Jul 25 00:33:11 2011"}], "topnets_normscores": [1.0, 0.937, 0.0], "topnets_scores": [-15726.244, -15726.309, -15756.21]}

@@ -1,0 +1,6 @@
+
+***** Mon Sep 26 12:38:40 2011 (1093.19 sec) *****:
+(Jul 23 2011:reestimate.c:reestimate_setlambda):zero value (r->pi_denom)
+
+***** Mon Sep 26 14:26:44 2011 (493.95 sec) *****:
+(Jul 23 2011:reestimate.c:reestimate_setlambda):zero value (r->pi_denom)

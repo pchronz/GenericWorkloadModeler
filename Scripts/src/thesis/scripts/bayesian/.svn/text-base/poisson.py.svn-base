@@ -1,0 +1,35 @@
+'''
+Created on Sep 20, 2011
+
+@author: work
+'''
+from collections import Counter
+from numpy import array, int32
+from pymc import *
+from time import time
+import math
+
+def poisson_req(model, testinput, cluster):
+    
+    requests_prob = []
+    starttime = time()
+    for input in testinput:
+        rate = model.rates[cluster][input].trace()
+        rate_array = array(rate, dtype = int32)
+        count_rate = Counter(rate_array)
+        highest_rate = count_rate.most_common()[0][0]
+        
+        req = [math.exp((poisson_like(x, highest_rate))) for x in range(200)]
+        requests_prob.append(req)
+    print "Query time"
+    print time() - starttime 
+    return requests_prob
+        
+        
+def sme_calc(testtarget, model, cluster):
+    result = 0.0
+    for i in range(len(testtarget)):
+        meanrealreq = (sum(model.target[cluster][i])/len(model.target[cluster][i]))
+        dis = min([pow( meanrealreq - testtarget[i][j], 2) for j in range(len(testtarget[i]))])
+        result += dis
+    return result/len(testtarget)

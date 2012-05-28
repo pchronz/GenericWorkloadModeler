@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/toasters-inc/!svn/ver/26/claudio/Scripts/src/thesis/scripts/bayesian
+END
+bayesiannet.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/toasters-inc/!svn/ver/26/claudio/Scripts/src/thesis/scripts/bayesian/bayesiannet.py
+END
+neuralnet.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/toasters-inc/!svn/ver/26/claudio/Scripts/src/thesis/scripts/bayesian/neuralnet.py
+END
+NewRequestmodel.py
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/toasters-inc/!svn/ver/33/claudio/Scripts/src/thesis/scripts/bayesian/NewRequestmodel.py
+END
+Requestmodel.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/toasters-inc/!svn/ver/26/claudio/Scripts/src/thesis/scripts/bayesian/Requestmodel.py
+END
+requestmodel.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/toasters-inc/!svn/ver/33/claudio/Scripts/src/thesis/scripts/bayesian/requestmodel.py
+END
+poisson.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/toasters-inc/!svn/ver/33/claudio/Scripts/src/thesis/scripts/bayesian/poisson.py
+END
+disasterModel.py
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/toasters-inc/!svn/ver/26/claudio/Scripts/src/thesis/scripts/bayesian/disasterModel.py
+END

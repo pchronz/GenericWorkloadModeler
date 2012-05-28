@@ -1,0 +1,20 @@
+'''
+Created on Aug 28, 2011
+
+@author: work
+'''
+from pymc import *
+from thesis.scripts.examples.main_ex import main_mcmc
+from numpy import matrix, int32
+import numpy
+
+target = main_mcmc()
+rates = []
+requests = []
+for j in range(len(target)):
+    val = matrix(target[j], dtype = int32)
+    #prior
+    rates.append([Normal('rate_%d_%d' % (j,i),mu = numpy.mean(val[i]), tau = 1.0, value = 1) for i in range(len(val))])
+    
+    #likelihood
+    requests.append([Poisson('request_%d_%d' % (j,i), mu=rates[j][i], value=val[i], observed=True) for i in range(len(val))])
