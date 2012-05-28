@@ -25,8 +25,23 @@ def poisson_req(model, testinput, cluster):
     print time() - starttime 
     return requests_prob
         
+def poisson_req_nocl(model, testinput, testtarget):
+    
+    requests_prob = []
+    starttime = time()
+    for input in testinput:
+        rate = model.rates[input].trace()
+        rate_array = array(rate, dtype = int32)
+        count_rate = Counter(rate_array)
+        highest_rate = count_rate.most_common()[0][0]
         
-def sme_calc(testtarget, model, cluster):
+        req = [math.exp((poisson_like(x, highest_rate))) for x in range(max(testtarget))]
+        requests_prob.append(req)
+    print "Query time"
+    print time() - starttime 
+    return requests_prob
+       
+def sme_calc(testtarget,  model, cluster):
     result = 0.0
     for i in range(len(testtarget)):
         meanrealreq = (sum(model.target[cluster][i])/len(model.target[cluster][i]))
@@ -34,16 +49,22 @@ def sme_calc(testtarget, model, cluster):
         result += dis
     return result/len(testtarget)
 
+def sme_calc_nocl(testtarget, realtarget):
+    result = 0.0
+    for i in range(len(testtarget)):
+        dis = min([pow(realtarget[i] - testtarget[i][j], 2) for j in range(len(testtarget[i]))])
+        result += dis
+    return result/len(testtarget)
     
-def mape_calc(self, testtarget, realtarget):
+def mape_calc(testtarget, realtarget):
     result = 0.0
     
     for i in range(len(testtarget)):
-        result += min([abs(testtarget[i][j] - realtarget[i])/testtarget[i] for j in range(len(testtarget[i]))])
+        result += min([abs(testtarget[i][j] - realtarget[i])/testtarget[i][j] for j in range(len(testtarget[i]))])
     
     return result/len(testtarget)
 
-def rsqr_calc(self, testtarget, realtarget):
+def rsqr_calc(testtarget, realtarget):
     result_up = 0.0
     result_down = 0.0
     avg = sum(realtarget)/len(realtarget)
@@ -54,7 +75,7 @@ def rsqr_calc(self, testtarget, realtarget):
     
     return 1 - (result_up / result_down)
 
-def pred_calc(self, testtarget, realtarget, x):
+def pred_calc(testtarget, realtarget, x):
     countx = 0.0
     for i in range(len(testtarget)):
         min_error = min([(testtarget[i][j]/realtarget[i]) - 1 for j in range(len(testtarget[i]))])

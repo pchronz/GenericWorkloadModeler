@@ -4,7 +4,7 @@ Created on Aug 28, 2011
 @author: work
 '''
 from pymc import *
-from thesis.scripts.examples.main_ex import main_mcmc
+#from thesis.scripts.examples.main_ex import main_mcmc
 from thesis.scripts.examples.article_main import initialize_wmproxy
 from numpy import matrix, int32
 import numpy
@@ -21,6 +21,7 @@ rates = []
 requests = []
 for j in range(len(target)):
     val = matrix(target[j], dtype = int32)
+    print val
     #prior
     rates.append([Normal('rate_%d_%d' % (j,i),mu = numpy.mean(val[i]), tau = 1.0, value = 1) for i in range(len(val))])
     

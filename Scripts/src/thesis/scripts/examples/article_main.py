@@ -7,13 +7,15 @@ from heapq import nlargest
 from matplotlib import pylab
 from matplotlib.pyplot import figure, show
 from numpy import array, int32
+from pymc import MCMC
+from thesis.scripts.bayesian.poisson import sme_calc_nocl, mape_calc, pred_calc, \
+    rsqr_calc, poisson_req, poisson_req_nocl
 from thesis.scripts.clustering.kmeans import kmeans
 from thesis.scripts.dataset.dataset import weeklydataset
 from thesis.scripts.hmm.hmm import HMM
 from thesis.scripts.samples.aggregatesamples import aggregatebymins
 from thesis.scripts.svr.svr import SVR
 from time import time
-from thesis.scripts.bayesian.poisson import sme_calc, mape_calc, pred_calc, rsqr_calc
 import csv
 import operator
 
@@ -115,7 +117,7 @@ def train_test(data, date_test):
 def initialize_wmproxy():
     
     #get all the logs divided by commands (assumption)
-    wmpcommon = csv.reader(open("/home/work/Workloads/WmProxyWL/wmpcommon_cmd.csv"), delimiter = ';')
+    wmpcommon = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/WMproxy/wmpcommon_cmd.csv"), delimiter = ';')
 #    wmpcoreoperation = csv.reader(open("/home/work/Workloads/WmProxyWL/wmpcoreoperation.csv"), delimiter = ';')
 #    wmp2wm = csv.reader(open("/home/work/Workloads/WmProxyWL/wmp2wm.csv"), delimiter = ';')
 #    WMPAuthorizer = csv.reader(open("/home/work/Workloads/WmProxyWL/WMPAuthorizer.csv"), delimiter = ';')
@@ -205,7 +207,7 @@ def hmm():
 #    vs = [hmm_req(models[j], target[j], testinput[j], testtarget[j], max(target[j])) for j in range(len(target)-1)]
 
 ##    model = hmm(target, testinput, testtarget, 6, 6, max(target))
-    v = models.hmm_req(models, traintarget, testinput, testtarget, max(traintarget))
+    v = models.hmm_req(traintarget, testinput[0:20], testtarget[0:20], max(traintarget))
 #    counter = 0
 #
 #    for v in vs:
@@ -215,7 +217,7 @@ def hmm():
     ttarget = []
     
     for state in lastest_states:
-        li = models.getEmission(state)
+        li = models.m.getEmission(state)
         m = (max(li)* 2.0)/3.0
         el = pylab.find(array(li) > m)
         maxes = nlargest(10, li)
@@ -223,10 +225,11 @@ def hmm():
         ttarget.append(maxvals)
 #        counter += 1
 ##    sme = sme_calc(ttarget, testtarget[counter])
-    sme = models.sme_calc(traintarget[0:20], out)
-    mape = models.mape_calc(ttarget, traintarget[0:20])
-    predx = models.pred_calc(ttarget, traintarget[0:20], 25)
-    rsq = models.rsqr_calc(ttarget, traintarget[0:20])
+    print ttarget
+    sme = models.sme_calc(ttarget, testtarget[0:20])
+    mape = models.mape_calc(ttarget, testtarget[0:20])
+    predx = models.pred_calc(ttarget, testtarget[0:20], 25)
+    rsq = models.rsqr_calc(ttarget, testtarget[0:20])
     
     print "SME = %f" % sme
     print "MAPE = %f" % mape
@@ -235,37 +238,42 @@ def hmm():
     
 def mcmc():
     
-    #initialization of data wmproxy
-    traininput, traintarget, testinput, testtarget = initialize_wmproxy()
     
-    from thesis.scripts.bayesian import NewRequestmodel
-    model = MCMC(NewRequestmodel)
+    from thesis.scripts.bayesian import requestModel_nocl
+    model = MCMC(requestModel_nocl)
     
-    starttime = time.time()
+    traintarget = model.traintarget
+    testtarget = model.testtarget
+    traininput = model.traininput
+    testinput = model.testinput
+    
+    
+    starttime = time()
     model.sample(iter=1000, burn=200, thin=10)
     print "Training time"
-    print time.time() - starttime
+    print time() - starttime
     
-    testinput = []
-    for i in range (200):
-        testinput.append(randint(0,1007))
+    for i in range(len(testinput)):
+        testinput[i] -= 10080
     
-    for i in range(10):
-        reqs = poisson_req(model, testinput, i)
+    print testinput[0:20]
+    reqs = poisson_req_nocl(model, testinput[0:20], testtarget)
+    
+    ttarget = []
+    for prob in reqs:
         
-        ttarget = []
-        for prob in reqs:
-    
-            m = max(prob)
-            el = find(prob > m*2/3)
-            maxes = nlargest(15, prob)
-            maxvals = [prob.index(maxval) for maxval in maxes]
-            ttarget.append(maxvals)
+        print len(prob)
+        m = max(prob)
+        el = pylab.find(prob > m*2/3)
+        maxes = nlargest(15, prob)
+        maxvals = [prob.index(maxval) for maxval in maxes]
+        print len(maxvals)
+        ttarget.append(maxvals)
         
-    sme = sme_calc(traintarget[0:20], out)
-    mape = mape_calc(ttarget, traintarget[0:20])
-    predx = pred_calc(ttarget, traintarget[0:20], 25)
-    rsq = rsqr_calc(ttarget, traintarget[0:20])    
+    sme = sme_calc_nocl(ttarget, testtarget[0:20])
+    mape = mape_calc(ttarget, testtarget[0:20])
+    predx = pred_calc(ttarget, testtarget[0:20], 25)
+    rsq = rsqr_calc(ttarget, testtarget[0:20])    
         
     print "SME = %f" % sme
     print "MAPE = %f" % mape

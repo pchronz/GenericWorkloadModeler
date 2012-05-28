@@ -100,7 +100,7 @@ class HMM():
         result = 0.0
         
         for i in range(len(testtarget)):
-            result += min([abs(testtarget[i][j] - realtarget[i])/testtarget[i] for j in range(len(testtarget[i]))])
+            result += min([abs(testtarget[i][j] + 1 - realtarget[i])/(testtarget[i][j] + 1) for j in range(len(testtarget[i]))])
         
         return result/len(testtarget)
     
