@@ -71,7 +71,7 @@ def rsqr_calc(testtarget, realtarget):
     
     for i in range(len(testtarget)):
         result_up += min([pow((realtarget[i] - testtarget[i][j]),2) for j in range(len(testtarget[i]))])
-        result_down += (realtarget[i] - avg)
+        result_down += pow((realtarget[i] - avg),2)
     
     return 1 - (result_up / result_down)
 
