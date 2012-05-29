@@ -52,6 +52,8 @@ def sme_calc(testtarget,  model, cluster):
 def sme_calc_nocl(testtarget, realtarget):
     result = 0.0
     for i in range(len(testtarget)):
+        print testtarget[i]
+        print realtarget[i]
         dis = min([pow(realtarget[i] - testtarget[i][j], 2) for j in range(len(testtarget[i]))])
         result += dis
     return result/len(testtarget)

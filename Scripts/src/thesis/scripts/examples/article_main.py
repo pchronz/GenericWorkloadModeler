@@ -262,12 +262,10 @@ def mcmc():
     ttarget = []
     for prob in reqs:
         
-        print len(prob)
         m = max(prob)
         el = pylab.find(prob > m*2/3)
         maxes = nlargest(15, prob)
         maxvals = [prob.index(maxval) for maxval in maxes]
-        print len(maxvals)
         ttarget.append(maxvals)
         
     sme = sme_calc_nocl(ttarget, testtarget[0:20])
