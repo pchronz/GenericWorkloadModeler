@@ -270,7 +270,7 @@ def mcmc():
         
     sme = sme_calc_nocl(ttarget, testtarget[0:20])
     mape = mape_calc(ttarget, testtarget[0:20])
-    predx = pred_calc(ttarget, testtarget[0:20], 25)
+    predx = pred_calc(ttarget, testtarget[0:20], 0.25)
     rsq = rsqr_calc(ttarget, testtarget[0:20])    
         
     print "SME = %f" % sme
