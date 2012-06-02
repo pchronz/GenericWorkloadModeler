@@ -262,17 +262,15 @@ def mcmc():
     ttarget = []
     for prob in reqs:
         
-        print len(prob)
         m = max(prob)
         el = pylab.find(prob > m*2/3)
         maxes = nlargest(15, prob)
         maxvals = [prob.index(maxval) for maxval in maxes]
-        print len(maxvals)
         ttarget.append(maxvals)
         
     sme = sme_calc_nocl(ttarget, testtarget[0:20])
     mape = mape_calc(ttarget, testtarget[0:20])
-    predx = pred_calc(ttarget, testtarget[0:20], 25)
+    predx = pred_calc(ttarget, testtarget[0:20], 0.25)
     rsq = rsqr_calc(ttarget, testtarget[0:20])    
         
     print "SME = %f" % sme
