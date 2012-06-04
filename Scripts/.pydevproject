@@ -11,6 +11,6 @@
 <path>/usr/lib/pymodules/python2.7</path>
 <path>/usr/local/lib/python2.7/dist-packages</path>
 <path>/usr/local/lib/python2.7/dist-packages/Pycluster-1.50-py2.7-linux-x86_64.egg</path>
-<path>/usr/local/lib/python2.7/dist-packages/pymc-2.1alpha-py2.7-linux-x86_64.egg</path>
+<path>/usr/local/lib/python2.7/dist-packages/pymc-2.2-py2.7-linux-x86_64.egg</path>
 </pydev_pathproperty>
 </pydev_project>

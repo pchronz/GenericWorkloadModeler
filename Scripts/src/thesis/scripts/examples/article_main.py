@@ -6,7 +6,9 @@ Created on May 21, 2012
 from heapq import nlargest
 from matplotlib import pylab
 from matplotlib.pyplot import figure, show
-from numpy import array, int32
+from numpy import array, int32, log
+from numpy.core.fromnumeric import mean, std
+from numpy.lib.scimath import sqrt
 from pymc import MCMC
 from thesis.scripts.bayesian.poisson import sme_calc_nocl, mape_calc, pred_calc, \
     rsqr_calc, poisson_req, poisson_req_nocl
@@ -165,18 +167,39 @@ def svr():
     
     #initialization of data wmproxy
     traininput, traintarget, testinput, testtarget = initialize_wmproxy()
-    
     #training of the SVR
-    svr = SVR(traininput, testinput, traintarget,4,16384,0.001,0.005)
+    
+    avg = mean(traintarget)
+    sigma = std(traintarget)
+    
+    C = max([abs(avg + sigma), abs(avg - sigma)])
+    print "C is equal to %f" % C
+    svr = SVR(traininput, testinput, traintarget,10080,C,0.003156,0.003156)
     
     
     out = svr.svr_req(testinput[0:20])
     
+    error = 0
+    for i in range(len(out)):
+        error += (out[i] - testtarget[i])
+    
+    mean_error = error / len(out)
+    variance = 0
+    for i in range(len(out)):
+        variance = abs(out[i] - mean_error)
+    
+    variance /= len(out)
+    
+    print "Variance = %f" % variance
+    
+    epsilon = 3*variance*sqrt(log(len(out))/len(out))
+    
+    print "Epsilon = %f" % epsilon
     #calculation of the metrics
-    sme = svr.calc_sme(traintarget[0:20], out)
-    mape = svr.calc_mape(out, traintarget[0:20])
-    predx = svr.calc_pred(out, traintarget[0:20], 25)
-    rsq = svr.calc_rsqr(out, traintarget[0:20])
+    sme = svr.calc_sme(testtarget[0:20], out)
+    mape = svr.calc_mape(out, testtarget[0:20])
+    predx = svr.calc_pred(out, testtarget[0:20], 25)
+    rsq = svr.calc_rsqr(out, testtarget[0:20])
     
     # print model results!
     x = array(testinput[0:20], dtype=int32)
@@ -187,7 +210,7 @@ def svr():
     ax1 = fig.add_subplot(1,1,1)
     ax1.plot(x, y)
     ax1.plot(xp,yp,"r")
-    ax1.axis([0,max(xp)+10,0,max(yp)+10])
+    ax1.axis([10080,max(xp)+10,0,max(y)+10])
     ax1.set_xlabel('minutes of the week')
     ax1.set_ylabel('number of requests')
     fig.savefig("svr_model_%f" % time(), format='png')
@@ -203,7 +226,7 @@ def hmm():
     #initialization of data wmproxy
     traininput, traintarget, testinput, testtarget = initialize_wmproxy()
     
-    models = HMM(traintarget, testinput, testtarget, 6, 6, max(traintarget))
+    models = HMM(traintarget, testinput, testtarget, 192, 192, max(traintarget+testtarget))
 #    vs = [hmm_req(models[j], target[j], testinput[j], testtarget[j], max(target[j])) for j in range(len(target)-1)]
 
 ##    model = hmm(target, testinput, testtarget, 6, 6, max(target))
@@ -212,11 +235,14 @@ def hmm():
 #
 #    for v in vs:
     lastest_states = [v[i][0][len(v[i][0])-1] for i in range(len(v)-1)]
-    print lastest_states
+#    print lastest_states
     
+#    states = models.hmm_req(testtarget[0:10], 20)
+#    
     ttarget = []
     
     for state in lastest_states:
+        print state
         li = models.m.getEmission(state)
         m = (max(li)* 2.0)/3.0
         el = pylab.find(array(li) > m)
@@ -226,15 +252,17 @@ def hmm():
 #        counter += 1
 ##    sme = sme_calc(ttarget, testtarget[counter])
     print ttarget
-    sme = models.sme_calc(ttarget, testtarget[0:20])
-    mape = models.mape_calc(ttarget, testtarget[0:20])
-    predx = models.pred_calc(ttarget, testtarget[0:20], 25)
-    rsq = models.rsqr_calc(ttarget, testtarget[0:20])
+    sme = models.sme_calc(ttarget, testtarget[10:30])
+    mape = models.mape_calc(ttarget, testtarget[10:30])
+    predx = models.pred_calc(ttarget, testtarget[10:30], 25)
+    rsq = models.rsqr_calc(ttarget, testtarget[10:30])
     
     print "SME = %f" % sme
     print "MAPE = %f" % mape
     print "R^2 = %f" % rsq
     print "PREDX = %f" % predx
+    
+    return models
     
 def mcmc():
     
