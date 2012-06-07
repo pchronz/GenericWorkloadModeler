@@ -171,12 +171,22 @@ def svr():
     traininput, traintarget, testinput, testtarget = initialize_wmproxy()
     #training of the SVR
     
+    #scaling values in training and test targets
+    
+    for i in range(len(traintarget)):
+        if(traintarget[i] != 0):
+            traintarget[i] = log(traintarget[i])
+    
+    for i in range(len(testtarget)):
+        if(testtarget[i] != 0):
+            testtarget[i] = log(testtarget[i])
+    
     avg = mean(traintarget)
     sigma = std(traintarget)
     
     C = max([abs(avg + sigma), abs(avg - sigma)])
     print "C is equal to %f" % C
-    svr = SVR(traininput, testinput, traintarget,2,C*102400,0.0003156,0.005)
+    svr = SVR(traininput, testinput, traintarget,50,C*128,0.2,0.2)
     
     
     out = svr.svr_req(testinput[0:20])
@@ -308,7 +318,7 @@ def mcmc():
     print "R^2 = %f" % rsq
     print "PREDX = %f" % predx
 
-def rvm():
+def rvr():
     samples = []
     
     #initialization of data wmproxy
@@ -322,9 +332,9 @@ def rvm():
     
     print msd
     
-    gamma = 2.0
+    gamma = 500.0
 #    trainer = RegressionTrainer(RadialBasisKernel(gamma), 0.5)
-    trainer = RegressionTrainer(PolynomialKernel(gamma, 0, 10), 0.0005)
+    trainer = RegressionTrainer(PolynomialKernel(gamma, 0, 5), 0.001)
     endtime = time()
     print 'using gamma of %f, calculated in %f' % (gamma, endtime - starttime)
     
