@@ -31,13 +31,13 @@ def aggregatebymins(points):
         req += 1
         week[dweek][(hour *60) + min] = req
         
-    target = mon + tue + wed + thu + fri
-    input = [x for x in range(1440*5)]
+    target = mon + tue + wed + thu + fri + sat + sun
+    input = [x for x in range(1440*7)]
     
     fig = figure()
     ax1 = fig.add_subplot(1,1,1)
     ax1.scatter(input, target, linewidths = 1.0)
-    ax1.axis([0,7200,0,600])
+    ax1.axis([0,10080,0,1900])
     ax1.set_xlabel('minute of the week')
     ax1.set_ylabel('Number of requests')
     show()

@@ -4,7 +4,7 @@ Created on Jul 12, 2011
 @author: Claudio
 '''
 from shogun.Features import Labels, RealFeatures
-from shogun.Kernel import GaussianKernel
+from shogun.Kernel import GaussianKernel, PolyKernel
 from shogun.Regression import LibSVR
 from numpy import matrix, float64, array, int32
 import time
@@ -26,6 +26,7 @@ class SVR:
         
         trainstart = time.time()
         self.kernel=GaussianKernel(self.feats_train, self.feats_train, width)
+#        self.kernel = PolyKernel(self.feats_train, self.feats_train, 2, False)
         labels=Labels(label_train)
     
         self.svr=LibSVR(C, epsilon, self.kernel, labels)

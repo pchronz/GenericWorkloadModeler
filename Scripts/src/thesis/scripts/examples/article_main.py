@@ -18,6 +18,8 @@ from thesis.scripts.hmm.hmm import HMM
 from thesis.scripts.samples.aggregatesamples import aggregatebymins
 from thesis.scripts.svr.svr import SVR
 from time import time
+import rvm_binding
+from rvm import VectorSample, RegressionTrainer, RadialBasisKernel, PolynomialKernel
 import csv
 import operator
 
@@ -174,7 +176,7 @@ def svr():
     
     C = max([abs(avg + sigma), abs(avg - sigma)])
     print "C is equal to %f" % C
-    svr = SVR(traininput, testinput, traintarget,10080,C,0.003156,0.003156)
+    svr = SVR(traininput, testinput, traintarget,2,C*102400,0.0003156,0.005)
     
     
     out = svr.svr_req(testinput[0:20])
@@ -305,6 +307,58 @@ def mcmc():
     print "MAPE = %f" % mape
     print "R^2 = %f" % rsq
     print "PREDX = %f" % predx
+
+def rvm():
+    samples = []
     
+    #initialization of data wmproxy
+    traininput, traintarget, testinput, testtarget = initialize_wmproxy()
+    
+    for x in traininput:
+        samples.append((x,))
+    starttime = time()
+    smp = VectorSample(samples)
+    msd = rvm_binding.compute_mean_squared_distance(smp)
+    
+    print msd
+    
+    gamma = 2.0
+#    trainer = RegressionTrainer(RadialBasisKernel(gamma), 0.5)
+    trainer = RegressionTrainer(PolynomialKernel(gamma, 0, 10), 0.0005)
+    endtime = time()
+    print 'using gamma of %f, calculated in %f' % (gamma, endtime - starttime)
+    
+    starttime = time()
+    fn = trainer.train(samples, traintarget)
+    endtime = time()
+    
+    print "Training time = ", (endtime - starttime)
+    
+    results = []
+    shorttest = testinput[0:30]
+    starttime = time()
+    for test in shorttest:
+        results.append(fn((test, )))
+    
+    endtime = time()
+    
+    print "Query time = ", (endtime - starttime)
+    
+    print results
+    print testtarget[0:30]
+    
+    x = array(testinput[0:30], dtype=int32)
+    y = array(testtarget[0:30], dtype=int32)
+    xp = array(testinput[0:30], dtype=int32)
+    yp = array(results, dtype=int32)
+    fig = figure()
+    ax1 = fig.add_subplot(1,1,1)
+    ax1.plot(x, y)
+    ax1.plot(xp,yp,"r")
+    ax1.axis([10080,max(xp)+10,0,max(y)+10])
+    ax1.set_xlabel('minutes of the week')
+    ax1.set_ylabel('number of requests')
+    fig.savefig("svr_model_%f" % time(), format='png')
+
 if __name__ == '__main__':
     svr()
