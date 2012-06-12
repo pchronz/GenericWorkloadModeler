@@ -176,20 +176,25 @@ def svr():
     for i in range(len(traintarget)):
         if(traintarget[i] != 0):
             traintarget[i] = log(traintarget[i])
+        if(traininput[i] != 0):
+            traininput[i] = log(traininput[i])
+            
     
     for i in range(len(testtarget)):
         if(testtarget[i] != 0):
             testtarget[i] = log(testtarget[i])
+        if(testinput[i] != 0):
+            testinput[i] = log(testinput[i])
     
     avg = mean(traintarget)
     sigma = std(traintarget)
-    
+    maxtrain = len(traintarget)
     C = max([abs(avg + sigma), abs(avg - sigma)])
     print "C is equal to %f" % C
-    svr = SVR(traininput, testinput, traintarget,50,C*128,0.2,0.2)
+    svr = SVR(traininput[maxtrain-1440:maxtrain], testinput, traintarget[maxtrain-1440:maxtrain],2**(-6),2**32,0.2,2**(-8))
     
     
-    out = svr.svr_req(testinput[0:20])
+    out = svr.svr_req(testinput[0:30])
     
     error = 0
     for i in range(len(out)):
@@ -208,21 +213,22 @@ def svr():
     
     print "Epsilon = %f" % epsilon
     #calculation of the metrics
-    sme = svr.calc_sme(testtarget[0:20], out)
-    mape = svr.calc_mape(out, testtarget[0:20])
-    predx = svr.calc_pred(out, testtarget[0:20], 25)
-    rsq = svr.calc_rsqr(out, testtarget[0:20])
-    
+    sme = svr.calc_sme(testtarget[0:30], out)
+    mape = svr.calc_mape(out, testtarget[0:30])
+    predx = svr.calc_pred(out, testtarget[0:30], 25)
+    rsq = svr.calc_rsqr(out, testtarget[0:30])
+    print out
+    print testtarget[0:30]
     # print model results!
-    x = array(testinput[0:20], dtype=int32)
-    y = array(testtarget[0:20], dtype=int32)
-    xp = array(testinput[0:20], dtype=int32)
+    x = array(testinput[0:30], dtype=int32)
+    y = array(testtarget[0:30], dtype=int32)
+    xp = array(testinput[0:30], dtype=int32)
     yp = array(out, dtype=int32)
     fig = figure()
     ax1 = fig.add_subplot(1,1,1)
     ax1.plot(x, y)
     ax1.plot(xp,yp,"r")
-    ax1.axis([10080,max(xp)+10,0,max(y)+10])
+    ax1.axis([8.9,max(xp)+0.5,0,max(y)+10])
     ax1.set_xlabel('minutes of the week')
     ax1.set_ylabel('number of requests')
     fig.savefig("svr_model_%f" % time(), format='png')
@@ -332,9 +338,9 @@ def rvr():
     
     print msd
     
-    gamma = 500.0
-#    trainer = RegressionTrainer(RadialBasisKernel(gamma), 0.5)
-    trainer = RegressionTrainer(PolynomialKernel(gamma, 0, 5), 0.001)
+    gamma = 2**-6
+    trainer = RegressionTrainer(RadialBasisKernel(gamma), 0.001)
+#    trainer = RegressionTrainer(PolynomialKernel(gamma, 0, 5), 0.001)
     endtime = time()
     print 'using gamma of %f, calculated in %f' % (gamma, endtime - starttime)
     
