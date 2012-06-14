@@ -4,7 +4,8 @@ Created on Sep 26, 2011
 @author: work
 '''
 
-from numpy import array, int32
+from numpy import array, int32, mean, var, zeros
+import numpy
 from ghmm import *
 import types
 import time
@@ -16,37 +17,76 @@ class HMM():
     m = None
     sigma = None
     
-    def __init__(self, fm_train, testinput, testtarget, N, M, max):
-        self.sigma = IntegerRange(0, max+1)
-        
+    def __init__(self, traintarget, N):
+        self.sigma = Float()
         A = []
         B = []
-        print max
+        
+        for i in range(len(traintarget)):
+            if(traintarget[i] != 0):
+                traintarget[i] = numpy.log(traintarget[i])
+        
+        
+        
+        
         for i in range(N):
-            B.append([0.00001]*(max+1))
             emission = []
             for i in range(N):
                 emission.append(1.0/N)
-            A.append(emission)
-            
-        partition = max/N        
+            A.append(emission)     
 #        max+=1
         
-        disc = 1 - 0.00001 * (max - partition)
+        times = len(traintarget)/N
         
-        for i in range(len(B)):
-            for j in range(max):
-                if(j >= i*partition) and (j < (i+1)*partition):
-                    B[i][j] = (disc/partition)
-                    
+        chunk = lambda ulist, step:  map(lambda i: ulist[i:i+step],  xrange(0, len(ulist), step))
+        
+        tempB = chunk(traintarget, times)
+        
+        for tb in tempB:
+            meanB = mean(tb)
+            varB = var(tb)
+            B.append([meanB, varB])
+        
         pi = [1.0/N]*N
-        self.m = HMMFromMatrices(self.sigma, DiscreteDistribution(self.sigma), A, B, pi)
-        train = EmissionSequence(self.sigma, fm_train)
+        
+        self.m = HMMFromMatrices(self.sigma, GaussianDistribution(self.sigma), A, B, pi)
         trainstart = time.time()
+        train = EmissionSequence(self.sigma, traintarget)
         self.m.baumWelch(train)
         trainend = time.time()
         print 'HMM train time'
         print trainend - trainstart
+#    def __init__(self, fm_train, testinput, testtarget, N, M, max):
+#        self.sigma = IntegerRange(0, max+1)
+#        
+#        A = []
+#        B = []
+#        print max
+#        for i in range(N):
+#            B.append([0.00001]*(max+1))
+#            emission = []
+#            for i in range(N):
+#                emission.append(1.0/N)
+#            A.append(emission)
+#            
+#        partition = max/N        
+##        max+=1
+#        
+#        disc = 1 - 0.00001 * (max - partition)
+#        
+#        for i in range(len(B)):
+#            for j in range(max):
+#                if(j >= i*partition) and (j < (i+1)*partition):
+#                    B[i][j] = (disc/partition)
+#                    
+#        pi = [1.0/N]*N
+#        self.m = HMMFromMatrices(self.sigma, DiscreteDistribution(self.sigma), A, B, pi)
+#        train = EmissionSequence(self.sigma, fm_train)
+#        trainstart = time.time()
+#        self.m.baumWelch(train)
+#        trainend = time.time()
+#        print 'HMM train time'
+#        print trainend - trainstart
         
         #delete silent states
     
@@ -109,43 +149,42 @@ class HMM():
 #        print 'HMM train time'
 #        print trainend - trainstart
 
-    def hmm_req(self, fm_train, testinput, testtarget, max):
-        sigma = IntegerRange(0, max+1)
-        v = []
-        
-        teststart = time.time()
-        for t in testinput:
-            seq = fm_train[0:t]
-            seq_test = EmissionSequence(sigma, seq)
-            v.append(self.m.viterbi(seq_test))
-        testend = time.time()
-        
-        print "HMM query response"
-        print testend-teststart
-        return v
-#    def hmm_req(self, starttest, timewindow):
+#    def hmm_req(self, fm_train, testinput, testtarget, max):
+#        sigma = IntegerRange(0, max+1)
+#        v = []
+#        
 #        teststart = time.time()
-#        print starttest
-#        seq = EmissionSequence(self.sigma, starttest)
-#        viterbipath = self.m.viterbi(seq)
-#        
-#        laststate = viterbipath[len(viterbipath)-1]
-#        
-#        A = self.m.asMatrices()[0]
-#        states = []
-#        ind = int(laststate)
-#        states.append(laststate)
-#        print A[ind].index(max(A[ind]))
-#        
-#        for i in range(timewindow):
-#            states.append(A[ind].index(max(A[ind])))
-#            ind = int(states[len(states)-1])
-#        
+#        for t in testinput:
+#            seq = fm_train[0:t]
+#            seq_test = EmissionSequence(sigma, seq)
+#            v.append(self.m.viterbi(seq_test))
 #        testend = time.time()
+#        
 #        print "HMM query response"
 #        print testend-teststart
-#        
-#        return states
+#        return v
+    def hmm_req(self, starttest, timewindow):
+        teststart = time.time()
+        seq = EmissionSequence(self.sigma, starttest)
+        viterbipath = self.m.viterbi(seq)
+        
+        A = self.m.asMatrices()[0]
+        states = list(viterbipath[0])
+        print "States"
+        print states
+        laststate = states[len(states)-1]
+        ind = int(laststate)
+        print ind
+        print A[ind].index(max(A[ind]))
+        
+        for i in range(timewindow - len(starttest)):
+            states.append(A[ind].index(max(A[ind])))
+            ind = int(states[len(states)-1])
+        
+        testend = time.time()
+        print "HMM query response"
+        print testend-teststart
+        return states
         
     def sme_calc(self, testtarget, realtarget):
         result = 0.0

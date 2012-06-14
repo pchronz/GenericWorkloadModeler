@@ -5,6 +5,7 @@ Created on May 21, 2012
 '''
 from heapq import nlargest
 from matplotlib import pylab
+import numpy
 from matplotlib.pyplot import figure, show
 from numpy import array, int32, log
 from numpy.core.fromnumeric import mean, std
@@ -19,6 +20,7 @@ from thesis.scripts.samples.aggregatesamples import aggregatebymins
 from thesis.scripts.svr.svr import SVR
 from time import time
 import rvm_binding
+from scipy.stats import norm
 from rvm import VectorSample, RegressionTrainer, RadialBasisKernel, PolynomialKernel
 import csv
 import operator
@@ -121,7 +123,7 @@ def train_test(data, date_test):
 def initialize_wmproxy():
     
     #get all the logs divided by commands (assumption)
-    wmpcommon = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/WMproxy/wmpcommon_cmd.csv"), delimiter = ';')
+    wmpcommon = csv.reader(open("/home/simulator/GenericWorkloadModeler/workloads/WMproxy/wmpcommon_cmd.csv"), delimiter = ';')
 #    wmpcoreoperation = csv.reader(open("/home/work/Workloads/WmProxyWL/wmpcoreoperation.csv"), delimiter = ';')
 #    wmp2wm = csv.reader(open("/home/work/Workloads/WmProxyWL/wmp2wm.csv"), delimiter = ';')
 #    WMPAuthorizer = csv.reader(open("/home/work/Workloads/WmProxyWL/WMPAuthorizer.csv"), delimiter = ';')
@@ -244,43 +246,81 @@ def hmm():
     #initialization of data wmproxy
     traininput, traintarget, testinput, testtarget = initialize_wmproxy()
     
-    models = HMM(traintarget, testinput, testtarget, 192, 192, max(traintarget+testtarget))
+#    models = HMM(traintarget, testinput, testtarget, 128, 128, max(traintarget+testtarget))
+    model = HMM(traintarget, 64)
 #    vs = [hmm_req(models[j], target[j], testinput[j], testtarget[j], max(target[j])) for j in range(len(target)-1)]
 
 ##    model = hmm(target, testinput, testtarget, 6, 6, max(target))
-    v = models.hmm_req(traintarget, testinput[0:20], testtarget[0:20], max(traintarget))
+#    v = models.hmm_req(traintarget, testinput[0:20], testtarget[0:20], max(traintarget))
 #    counter = 0
+    for i in range(len(testtarget)):
+            if(testtarget[i] != 0):
+                testtarget[i] = numpy.log(testtarget[i])
 #
+    states = model.hmm_req(testtarget[0:11], 30)
 #    for v in vs:
-    lastest_states = [v[i][0][len(v[i][0])-1] for i in range(len(v)-1)]
+#    lastest_states = [v[i][0][len(v[i][0])-1] for i in range(len(v)-1)]
 #    print lastest_states
     
 #    states = models.hmm_req(testtarget[0:10], 20)
 #    
     ttarget = []
     
-    for state in lastest_states:
-        print state
-        li = models.m.getEmission(state)
-        m = (max(li)* 2.0)/3.0
-        el = pylab.find(array(li) > m)
-        maxes = nlargest(10, li)
-        maxvals = [li.index(maxval) for maxval in maxes]
-        ttarget.append(maxvals)
+    print "States2"
+    print states
+    for state in states:
+        li = model.m.getEmission(state)
+        normal = norm.rvs(loc = li[0], scale = li[1], size=15)
+        ttarget.append(normal)
 #        counter += 1
 ##    sme = sme_calc(ttarget, testtarget[counter])
     print ttarget
-    sme = models.sme_calc(ttarget, testtarget[10:30])
-    mape = models.mape_calc(ttarget, testtarget[10:30])
-    predx = models.pred_calc(ttarget, testtarget[10:30], 25)
-    rsq = models.rsqr_calc(ttarget, testtarget[10:30])
     
-    print "SME = %f" % sme
-    print "MAPE = %f" % mape
-    print "R^2 = %f" % rsq
-    print "PREDX = %f" % predx
+    minout = []
+    maxout = []
+    meanout = []
     
-    return models
+    for element in ttarget:
+        minout.append(min(element))
+        maxout.append(max(element))
+        meanout.append(mean(element))
+        
+    
+    print "minout %s: " % minout
+    print "meanout %s: " % meanout
+    print "maxout %s: " % maxout
+     
+    
+    x = array(testinput[0:30], dtype=int32)
+    y = array(testtarget[0:30], dtype=int32)
+    xp = array(testinput[0:30], dtype=int32)
+    yp = array(minout, dtype=int32)
+    xp1 = array(testinput[0:30], dtype=int32)
+    yp1 = array(maxout, dtype=int32)
+    xp2 = array(testinput[0:30], dtype=int32)
+    yp2 = array(meanout, dtype=int32)
+    fig = figure()
+    ax1 = fig.add_subplot(1,1,1)
+    ax1.plot(x, y)
+    ax1.plot(xp,yp,"r")
+    ax1.plot(xp1,yp1,"g")
+    ax1.plot(xp2,yp2,"y")
+#    ax1.axis([8.9,max(xp)+0.5,0,max(y)+10])
+    ax1.set_xlabel('minutes of the week')
+    ax1.set_ylabel('number of requests')
+    fig.savefig("hmm_model_%f" % time(), format='png')
+    
+#    sme = model.sme_calc(ttarget, testtarget[10:30])
+#    mape = model.mape_calc(ttarget, testtarget[10:30])
+#    predx = model.pred_calc(ttarget, testtarget[10:30], 25)
+#    rsq = model.rsqr_calc(ttarget, testtarget[10:30])
+#    
+#    print "SME = %f" % sme
+#    print "MAPE = %f" % mape
+#    print "R^2 = %f" % rsq
+#    print "PREDX = %f" % predx
+    
+    return model
     
 def mcmc():
     
