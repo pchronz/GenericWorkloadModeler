@@ -22,25 +22,33 @@ class HMM():
         A = []
         B = []
         
-        for i in range(len(traintarget)):
-            if(traintarget[i] != 0):
-                traintarget[i] = numpy.log(traintarget[i])
-        
-        
+#        for i in range(len(traintarget)):
+#            if(traintarget[i] != 0):
+#                traintarget[i] = numpy.log(traintarget[i])
+#            else:
+#                traintarget[i] = 1.0/100000000000
         
         
         for i in range(N):
-            emission = []
-            for i in range(N):
-                emission.append(1.0/N)
-            A.append(emission)     
+            transition = []
+            for j in range(N):
+                if(i == j):
+                    transition.append(1.0/10000000)
+                else:
+                    transition.append(1.0/(N-1))
+            A.append(transition)     
 #        max+=1
-        
         times = len(traintarget)/N
-        
+        print times
         chunk = lambda ulist, step:  map(lambda i: ulist[i:i+step],  xrange(0, len(ulist), step))
+#        sortedtrain = sorted(traintarget)
         
         tempB = chunk(traintarget, times)
+#        tempB = []
+#        half = len(tempB1)/2
+#        for i in range(half):
+#            print i
+#            tempB.append(tempB1[i]+tempB1[i+half])
         
         for tb in tempB:
             meanB = mean(tb)

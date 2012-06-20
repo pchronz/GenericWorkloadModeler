@@ -21,7 +21,13 @@ import numpy
  #initialization of data wmproxy
 traininput, traintarget, testinput, testtarget = initialize_wmproxy()
 
+for i in range(len(traintarget)):
+        if(traintarget[i] != 0):
+            traintarget[i] = numpy.log(traintarget[i])
 
+for i in range(len(testtarget)):
+        if(testtarget[i] != 0):
+            testtarget[i] = numpy.log(testtarget[i])
 
 rates = []
 requests = []

@@ -123,7 +123,7 @@ def train_test(data, date_test):
 def initialize_wmproxy():
     
     #get all the logs divided by commands (assumption)
-    wmpcommon = csv.reader(open("/home/simulator/GenericWorkloadModeler/workloads/WMproxy/wmpcommon_cmd.csv"), delimiter = ';')
+    wmpcommon = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/WMproxy/wmpcommon_cmd.csv"), delimiter = ';')
 #    wmpcoreoperation = csv.reader(open("/home/work/Workloads/WmProxyWL/wmpcoreoperation.csv"), delimiter = ';')
 #    wmp2wm = csv.reader(open("/home/work/Workloads/WmProxyWL/wmp2wm.csv"), delimiter = ';')
 #    WMPAuthorizer = csv.reader(open("/home/work/Workloads/WmProxyWL/WMPAuthorizer.csv"), delimiter = ';')
@@ -241,21 +241,21 @@ def svr():
     print "PREDX = %f" % predx
     
 
-def hmm():
+def hmm(states_nuber):
     
     #initialization of data wmproxy
     traininput, traintarget, testinput, testtarget = initialize_wmproxy()
-    
+    trainelements = len(traintarget)
 #    models = HMM(traintarget, testinput, testtarget, 128, 128, max(traintarget+testtarget))
-    model = HMM(traintarget, 64)
+    model = HMM(traintarget, states_nuber)
 #    vs = [hmm_req(models[j], target[j], testinput[j], testtarget[j], max(target[j])) for j in range(len(target)-1)]
 
 ##    model = hmm(target, testinput, testtarget, 6, 6, max(target))
 #    v = models.hmm_req(traintarget, testinput[0:20], testtarget[0:20], max(traintarget))
 #    counter = 0
-    for i in range(len(testtarget)):
-            if(testtarget[i] != 0):
-                testtarget[i] = numpy.log(testtarget[i])
+#    for i in range(len(testtarget)):
+#            if(testtarget[i] != 0):
+#                testtarget[i] = numpy.log(testtarget[i])
 #
     states = model.hmm_req(testtarget[0:11], 30)
 #    for v in vs:
@@ -342,8 +342,7 @@ def mcmc():
     for i in range(len(testinput)):
         testinput[i] -= 10080
     
-    print testinput[0:20]
-    reqs = poisson_req_nocl(model, testinput[0:20], testtarget)
+    reqs = poisson_req_nocl(model, testinput[0:30], testtarget[0:30])
     
     ttarget = []
     for prob in reqs:
@@ -354,15 +353,49 @@ def mcmc():
         maxvals = [prob.index(maxval) for maxval in maxes]
         ttarget.append(maxvals)
         
-    sme = sme_calc_nocl(ttarget, testtarget[0:20])
-    mape = mape_calc(ttarget, testtarget[0:20])
-    predx = pred_calc(ttarget, testtarget[0:20], 0.25)
-    rsq = rsqr_calc(ttarget, testtarget[0:20])    
+#    sme = sme_calc_nocl(ttarget, testtarget[0:20])
+#    mape = mape_calc(ttarget, testtarget[0:20])
+#    predx = pred_calc(ttarget, testtarget[0:20], 0.25)
+#    rsq = rsqr_calc(ttarget, testtarget[0:20])    
+#        
+#    print "SME = %f" % sme
+#    print "MAPE = %f" % mape
+#    print "R^2 = %f" % rsq
+#    print "PREDX = %f" % predx
+
+    minout = []
+    maxout = []
+    meanout = []
+    
+    for element in ttarget:
+        minout.append(min(element))
+        maxout.append(max(element))
+        meanout.append(mean(element))
         
-    print "SME = %f" % sme
-    print "MAPE = %f" % mape
-    print "R^2 = %f" % rsq
-    print "PREDX = %f" % predx
+    
+    print "minout %s: " % minout
+    print "meanout %s: " % meanout
+    print "maxout %s: " % maxout
+     
+    
+    x = array(testinput[0:30], dtype=int32)
+    y = array(testtarget[0:30], dtype=int32)
+    xp = array(testinput[0:30], dtype=int32)
+    yp = array(minout, dtype=int32)
+    xp1 = array(testinput[0:30], dtype=int32)
+    yp1 = array(maxout, dtype=int32)
+    xp2 = array(testinput[0:30], dtype=int32)
+    yp2 = array(meanout, dtype=int32)
+    fig = figure()
+    ax1 = fig.add_subplot(1,1,1)
+    ax1.plot(x, y)
+    ax1.plot(xp,yp,"r")
+    ax1.plot(xp1,yp1,"g")
+    ax1.plot(xp2,yp2,"y")
+#    ax1.axis([8.9,max(xp)+0.5,0,max(y)+10])
+    ax1.set_xlabel('minutes of the week')
+    ax1.set_ylabel('number of requests')
+    fig.savefig("mcmc_model_%f" % time(), format='png')
 
 def rvr():
     samples = []
