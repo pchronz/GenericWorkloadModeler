@@ -9,6 +9,7 @@ import numpy
 from ghmm import *
 import types
 import time
+from sets import Set
 
 class HMM():
     '''
@@ -38,18 +39,19 @@ class HMM():
                     transition.append(1.0/(N-1))
             A.append(transition)     
 #        max+=1
-        times = len(traintarget)/N
+        sortedtrain = sorted(traintarget)
+#        targetlist = list(set(sortedtrain))
+#        numbers_zero = sortedtrain.count(0)
+#        print numbers_zero
+#        targetlist = sortedtrain[(numbers_zero+(numbers_zero/3)):len(sortedtrain)]
+        
+        times = len(targetlist)/N
         print times
         chunk = lambda ulist, step:  map(lambda i: ulist[i:i+step],  xrange(0, len(ulist), step))
-#        sortedtrain = sorted(traintarget)
         
-        tempB = chunk(traintarget, times)
-#        tempB = []
-#        half = len(tempB1)/2
-#        for i in range(half):
-#            print i
-#            tempB.append(tempB1[i]+tempB1[i+half])
+        tempB = chunk(targetlist, times)
         
+#        tempB = traintarget[0:(numbers_zero+(numbers_zero/3))]+tempB
         for tb in tempB:
             meanB = mean(tb)
             varB = var(tb)

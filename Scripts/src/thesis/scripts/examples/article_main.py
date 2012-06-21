@@ -256,6 +256,8 @@ def hmm(states_nuber):
 #    for i in range(len(testtarget)):
 #            if(testtarget[i] != 0):
 #                testtarget[i] = numpy.log(testtarget[i])
+#            else:
+#                testtarget[i] = 1.0/100000000000
 #
     states = model.hmm_req(testtarget[0:11], 30)
 #    for v in vs:
@@ -300,6 +302,7 @@ def hmm(states_nuber):
     xp2 = array(testinput[0:30], dtype=int32)
     yp2 = array(meanout, dtype=int32)
     fig = figure()
+    
     ax1 = fig.add_subplot(1,1,1)
     ax1.plot(x, y)
     ax1.plot(xp,yp,"r")
@@ -307,8 +310,8 @@ def hmm(states_nuber):
     ax1.plot(xp2,yp2,"y")
 #    ax1.axis([8.9,max(xp)+0.5,0,max(y)+10])
     ax1.set_xlabel('minutes of the week')
-    ax1.set_ylabel('number of requests')
-    fig.savefig("hmm_model_%f" % time(), format='png')
+    ax1.set_ylabel('number of requests'
+    fig.savefig("hmm_model_%f.png" % time(), format='png')
     
 #    sme = model.sme_calc(ttarget, testtarget[10:30])
 #    mape = model.mape_calc(ttarget, testtarget[10:30])
