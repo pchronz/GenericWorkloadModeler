@@ -45,11 +45,30 @@ class HMM():
 #        print numbers_zero
 #        targetlist = sortedtrain[(numbers_zero+(numbers_zero/3)):len(sortedtrain)]
         
-        times = len(targetlist)/N
-        print times
-        chunk = lambda ulist, step:  map(lambda i: ulist[i:i+step],  xrange(0, len(ulist), step))
+#        times = len(sortedtrain)/N
+#        print times
+#        chunk = lambda ulist, step:  map(lambda i: ulist[i:i+step],  xrange(0, len(ulist), step))
+#        
+#        tempB = chunk(targetlist, times)
         
-        tempB = chunk(targetlist, times)
+        maxvalue = max(sortedtrain)
+        unit = int(maxvalue/N)
+        
+        tempB = []
+        print "Maxvalue = %d" % maxvalue
+        print "Unit is %d" % unit
+        for i in range(N+1):
+            tempB.append([])
+            
+        for value in sortedtrain:
+            tempB[value/unit].append(value)
+        
+        #the last array contain exceeded values, I will put in the N-th array
+        exceed = tempB.pop()
+        tempB[len(tempB)-1] += exceed 
+        
+        print "tempB = %s" % tempB
+        
         
 #        tempB = traintarget[0:(numbers_zero+(numbers_zero/3))]+tempB
         for tb in tempB:

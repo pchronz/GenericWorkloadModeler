@@ -288,9 +288,9 @@ def hmm(states_nuber):
         meanout.append(mean(element))
         
     
-    print "minout %s: " % minout
-    print "meanout %s: " % meanout
-    print "maxout %s: " % maxout
+#    print "minout %s: " % minout
+#    print "meanout %s: " % meanout
+#    print "maxout %s: " % maxout
      
     
     x = array(testinput[0:30], dtype=int32)
@@ -310,7 +310,7 @@ def hmm(states_nuber):
     ax1.plot(xp2,yp2,"y")
 #    ax1.axis([8.9,max(xp)+0.5,0,max(y)+10])
     ax1.set_xlabel('minutes of the week')
-    ax1.set_ylabel('number of requests'
+    ax1.set_ylabel('number of requests')
     fig.savefig("hmm_model_%f.png" % time(), format='png')
     
 #    sme = model.sme_calc(ttarget, testtarget[10:30])
