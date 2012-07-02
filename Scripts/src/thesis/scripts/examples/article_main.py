@@ -5,25 +5,27 @@ Created on May 21, 2012
 '''
 from heapq import nlargest
 from matplotlib import pylab
-import numpy
 from matplotlib.pyplot import figure, show
 from numpy import array, int32, log
 from numpy.core.fromnumeric import mean, std
 from numpy.lib.scimath import sqrt
 from pymc import MCMC
+from rvm import VectorSample, RegressionTrainer, RadialBasisKernel, \
+    PolynomialKernel
+from scipy.stats import norm
 from thesis.scripts.bayesian.poisson import sme_calc_nocl, mape_calc, pred_calc, \
     rsqr_calc, poisson_req, poisson_req_nocl
 from thesis.scripts.clustering.kmeans import kmeans
-from thesis.scripts.dataset.dataset import weeklydataset
+from thesis.scripts.dataset.dataset import weeklydataset, weeklydataset_sg_ndata
 from thesis.scripts.hmm.hmm import HMM
-from thesis.scripts.samples.aggregatesamples import aggregatebymins
+from thesis.scripts.samples.aggregatesamples import aggregatebymins, \
+    aggregatebymins_sg_ndata
 from thesis.scripts.svr.svr import SVR
 from time import time
-import rvm_binding
-from scipy.stats import norm
-from rvm import VectorSample, RegressionTrainer, RadialBasisKernel, PolynomialKernel
 import csv
+import numpy
 import operator
+import rvm_binding
 
 def divide_by_cmd(filename1, filename2, position):
     X, label = weeklydataset(filename1, [])
@@ -113,13 +115,23 @@ def train_test(data, date_test):
         
         #shift to start from monday
         if (float_item > date_test):
-            test.append(float_item - 131348.0)
+            test.append(float_item)  # - 131348.0 for WMProxy
         else:
-            train.append(float_item - 131348.0)
+            train.append(float_item) # - 131348.0 for WMProxy0
     
     return train, test
     
+def initialize_ews():
     
+    ews = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/EWS/ews_article.csv"), delimiter = ';')
+    
+    train, test = train_test(ews, 1312754402.0)
+    
+    traininput, traintarget = aggregatebymins(train)
+    testinput, testtarget = aggregatebymins(test)
+    
+    return traininput, traintarget, testinput, testtarget
+     
 def initialize_wmproxy():
     
     #get all the logs divided by commands (assumption)
