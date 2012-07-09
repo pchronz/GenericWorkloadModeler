@@ -14,8 +14,8 @@
     <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true" height="428" width="570">
       <operator activated="true" class="read_csv" compatibility="5.2.006" expanded="true" height="60" name="Read CSV (2)" width="90" x="246" y="255">
-        <parameter key="csv_file" value="/home/claudio/GenericWorkloadModeler/svrtest.csv"/>
-        <parameter key="column_separators" value="\s"/>
+        <parameter key="csv_file" value="/home/claudio/GenericWorkloadModeler/workloads/EWS/ews_test.csv"/>
+        <parameter key="column_separators" value=","/>
         <parameter key="trim_lines" value="false"/>
         <parameter key="use_quotes" value="true"/>
         <parameter key="quotes_character" value="&quot;"/>
@@ -40,8 +40,8 @@
         <parameter key="datamanagement" value="double_array"/>
       </operator>
       <operator activated="true" class="read_csv" compatibility="5.2.006" expanded="true" height="60" name="Read CSV" width="90" x="45" y="30">
-        <parameter key="csv_file" value="/home/claudio/GenericWorkloadModeler/svrtrain.csv"/>
-        <parameter key="column_separators" value="\s"/>
+        <parameter key="csv_file" value="/home/claudio/GenericWorkloadModeler/workloads/EWS/ews_train.csv"/>
+        <parameter key="column_separators" value=","/>
         <parameter key="trim_lines" value="false"/>
         <parameter key="use_quotes" value="true"/>
         <parameter key="quotes_character" value="&quot;"/>

@@ -130,6 +130,9 @@ def initialize_ews():
     traininput, traintarget = aggregatebymins(train)
     testinput, testtarget = aggregatebymins(test)
     
+    for i in range(len(testinput)):
+        testinput[i] += 10080
+    
     return traininput, traintarget, testinput, testtarget
      
 def initialize_wmproxy():
@@ -256,7 +259,10 @@ def svr():
 def hmm(states_nuber):
     
     #initialization of data wmproxy
-    traininput, traintarget, testinput, testtarget = initialize_wmproxy()
+#    traininput, traintarget, testinput, testtarget = initialize_wmproxy()
+
+    #initialization of EWS data
+    traininput, traintarget, testinput, testtarget = initialize_ews()
     trainelements = len(traintarget)
 #    models = HMM(traintarget, testinput, testtarget, 128, 128, max(traintarget+testtarget))
     model = HMM(traintarget, states_nuber)
@@ -284,7 +290,7 @@ def hmm(states_nuber):
     print states
     for state in states:
         li = model.m.getEmission(state)
-        normal = norm.rvs(loc = li[0], scale = li[1], size=15)
+        normal = norm.interval(0.15,loc = li[0], scale = li[1])
         ttarget.append(normal)
 #        counter += 1
 ##    sme = sme_calc(ttarget, testtarget[counter])
@@ -323,7 +329,7 @@ def hmm(states_nuber):
 #    ax1.axis([8.9,max(xp)+0.5,0,max(y)+10])
     ax1.set_xlabel('minutes of the week')
     ax1.set_ylabel('number of requests')
-    fig.savefig("hmm_model_%f.png" % time(), format='png')
+#    fig.savefig("hmm_model_%f.png" % time(), format='png')
     
 #    sme = model.sme_calc(ttarget, testtarget[10:30])
 #    mape = model.mape_calc(ttarget, testtarget[10:30])

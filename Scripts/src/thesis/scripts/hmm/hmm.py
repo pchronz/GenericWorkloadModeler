@@ -4,7 +4,7 @@ Created on Sep 26, 2011
 @author: work
 '''
 
-from numpy import array, int32, mean, var, zeros
+from numpy import array, int32, mean, std, zeros
 import numpy
 from ghmm import *
 import types
@@ -30,14 +30,14 @@ class HMM():
 #                traintarget[i] = 1.0/100000000000
         
         
-        for i in range(N):
-            transition = []
-            for j in range(N):
-                if(i == j):
-                    transition.append(1.0/10000000)
-                else:
-                    transition.append(1.0/(N-1))
-            A.append(transition)     
+#        for i in range(N):
+#            transition = []
+#            for j in range(N):
+#                if(i == j):
+#                    transition.append(1.0/10000000)
+#                else:
+#                    transition.append(1.0/(N-1))
+#            A.append(transition)     
 #        max+=1
         sortedtrain = sorted(traintarget)
 #        targetlist = list(set(sortedtrain))
@@ -57,26 +57,40 @@ class HMM():
         tempB = []
         print "Maxvalue = %d" % maxvalue
         print "Unit is %d" % unit
-        for i in range(N+1):
+        for i in range(N):
             tempB.append([])
             
         for value in sortedtrain:
-            tempB[value/unit].append(value)
-        
-        #the last array contain exceeded values, I will put in the N-th array
-        exceed = tempB.pop()
-        tempB[len(tempB)-1] += exceed 
-        
-        print "tempB = %s" % tempB
-        
+            if value/unit >= N:
+                tempB[N-1].append(value)
+            else:
+                tempB[value/unit].append(value)
+   
         
 #        tempB = traintarget[0:(numbers_zero+(numbers_zero/3))]+tempB
         for tb in tempB:
-            meanB = mean(tb)
-            varB = var(tb)
+            if len(tb) > 0:
+                meanB = mean(tb)
+                varB = std(tb)
+                if(varB == 0):
+                    varB = 1.0
+                
+                print "mean = %f  var = %f" % (meanB, varB)
             B.append([meanB, varB])
         
         pi = [1.0/N]*N
+        
+        for i in range(len(B)):
+            transition = []
+            for j in range(len(B)):
+                if(i == j):
+                    transition.append(0)
+                else:
+                    transition.append(1.0/(len(B)-1))
+            A.append(transition)
+        
+        
+        print "B = %s" % B
         
         self.m = HMMFromMatrices(self.sigma, GaussianDistribution(self.sigma), A, B, pi)
         trainstart = time.time()
