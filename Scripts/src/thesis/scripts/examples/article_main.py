@@ -5,7 +5,8 @@ Created on May 21, 2012
 '''
 from heapq import nlargest
 from matplotlib import pylab
-from matplotlib.pyplot import figure, show
+from matplotlib.legend import Legend
+from matplotlib.pyplot import figure, show, legend
 from numpy import array, int32, log
 from numpy.core.fromnumeric import mean, std
 from numpy.lib.scimath import sqrt
@@ -18,8 +19,8 @@ from thesis.scripts.bayesian.poisson import sme_calc_nocl, mape_calc, pred_calc,
 from thesis.scripts.clustering.kmeans import kmeans
 from thesis.scripts.dataset.dataset import weeklydataset, weeklydataset_sg_ndata
 from thesis.scripts.hmm.hmm import HMM
-from thesis.scripts.samples.aggregatesamples import aggregatebymins, \
-    aggregatebymins_sg_ndata
+from thesis.scripts.samples.aggregatesamples import aggregatebymins_avg, \
+    aggregatebymins_sg_ndata_avg, aggregatebymins
 from thesis.scripts.svr.svr import SVR
 from time import time
 import csv
@@ -123,15 +124,15 @@ def train_test(data, date_test):
     
 def initialize_ews():
     
-    ews = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/EWS/ews_article.csv"), delimiter = ';')
+    ews = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/EWS/ews_article2.csv"), delimiter = ';')
     
-    train, test = train_test(ews, 1312754402.0)
+    train, test = train_test(ews, 1313971200.0)
     
     traininput, traintarget = aggregatebymins(train)
     testinput, testtarget = aggregatebymins(test)
     
-    for i in range(len(testinput)):
-        testinput[i] += 10080
+#    for i in range(len(testinput)):
+#        testinput[i] += 10080
     
     return traininput, traintarget, testinput, testtarget
      
@@ -171,8 +172,8 @@ def initialize_wmproxy():
     
     
     #get the first column of the datapoints (timestamp) and aggregate it (both train and test)
-    traininput, traintarget = aggregatebymins(train)
-    testinput, testtarget = aggregatebymins(test)
+    traininput, traintarget = aggregatebymins_avg(train)
+    testinput, testtarget = aggregatebymins_avg(test)
     
     #set the testinput as the next week
     for i in range(len(testinput)):
@@ -208,7 +209,10 @@ def svr():
     maxtrain = len(traintarget)
     C = max([abs(avg + sigma), abs(avg - sigma)])
     print "C is equal to %f" % C
-    svr = SVR(traininput[maxtrain-1440:maxtrain], testinput, traintarget[maxtrain-1440:maxtrain],2**(-6),2**32,0.2,2**(-8))
+    C = 2**32
+    gamma = 2**(-6)
+    eps = 2**(-8)
+    svr = SVR(traininput[maxtrain-1440:maxtrain], testinput, traintarget[maxtrain-1440:maxtrain],gamma,C,eps,eps)
     
     
     out = svr.svr_req(testinput[0:30])
@@ -243,11 +247,14 @@ def svr():
     yp = array(out, dtype=int32)
     fig = figure()
     ax1 = fig.add_subplot(1,1,1)
-    ax1.plot(x, y)
-    ax1.plot(xp,yp,"r")
+    ax1.title.set_text("Predizioni modello SVR con C= %f, Gamma = %f, Eps = %f" % (C, gamma, eps))
+    realvalues = ax1.plot(x, y)
+    predictedvalues = ax1.plot(xp,yp,"r")
     ax1.axis([8.9,max(xp)+0.5,0,max(y)+10])
     ax1.set_xlabel('minutes of the week')
     ax1.set_ylabel('number of requests')
+    legend([realvalues,predictedvalues], ["Real Values","Predicted Values"])
+    
     fig.savefig("svr_model_%f" % time(), format='png')
     
     print "SME = %f" % sme
@@ -322,13 +329,15 @@ def hmm(states_nuber):
     fig = figure()
     
     ax1 = fig.add_subplot(1,1,1)
-    ax1.plot(x, y)
-    ax1.plot(xp,yp,"r")
-    ax1.plot(xp1,yp1,"g")
-    ax1.plot(xp2,yp2,"y")
+    ax1.title.set_text("Predizioni modello HMM con %d stati" % (states_nuber))
+    realvalues = ax1.plot(x, y)
+    minpred = ax1.plot(xp,yp,"r")
+    maxpred = ax1.plot(xp1,yp1,"g")
+    avgpred = ax1.plot(xp2,yp2,"y")
 #    ax1.axis([8.9,max(xp)+0.5,0,max(y)+10])
     ax1.set_xlabel('minutes of the week')
     ax1.set_ylabel('number of requests')
+    legend([realvalues,minpred, avgpred, maxpred], ["Real Values","Minimum Predicted Values","Average Predicted Values","Maximum Predicted Values"])
 #    fig.savefig("hmm_model_%f.png" % time(), format='png')
     
 #    sme = model.sme_calc(ttarget, testtarget[10:30])
@@ -356,7 +365,8 @@ def mcmc():
     
     
     starttime = time()
-    model.sample(iter=1000, burn=200, thin=10)
+    iter = 1000
+    model.sample(iter=iter, burn=200, thin=10)
     print "Training time"
     print time() - starttime
     
@@ -409,13 +419,15 @@ def mcmc():
     yp2 = array(meanout, dtype=int32)
     fig = figure()
     ax1 = fig.add_subplot(1,1,1)
-    ax1.plot(x, y)
-    ax1.plot(xp,yp,"r")
-    ax1.plot(xp1,yp1,"g")
-    ax1.plot(xp2,yp2,"y")
+    ax1.title.set_text("Predizioni modello MCMC con %d iterazioni" % (iter))
+    realvalues = ax1.plot(x, y)
+    minpred = ax1.plot(xp,yp,"r")
+    maxpred = ax1.plot(xp1,yp1,"g")
+    avgpred = ax1.plot(xp2,yp2,"y")
 #    ax1.axis([8.9,max(xp)+0.5,0,max(y)+10])
     ax1.set_xlabel('minutes of the week')
     ax1.set_ylabel('number of requests')
+    legend([realvalues,minpred, avgpred, maxpred], ["Real Values","Minimum Predicted Values","Average Predicted Values","Maximum Predicted Values"])
     fig.savefig("mcmc_model_%f" % time(), format='png')
 
 def rvr():
@@ -463,12 +475,14 @@ def rvr():
     yp = array(results, dtype=int32)
     fig = figure()
     ax1 = fig.add_subplot(1,1,1)
-    ax1.plot(x, y)
-    ax1.plot(xp,yp,"r")
+    ax1.title.set_text("Predizioni modello SVR Gamma = %f" % (gamma))
+    realvalues = ax1.plot(x, y)
+    predictedvalues = ax1.plot(xp,yp,"r")
     ax1.axis([10080,max(xp)+10,0,max(y)+10])
     ax1.set_xlabel('minutes of the week')
     ax1.set_ylabel('number of requests')
-    fig.savefig("svr_model_%f" % time(), format='png')
+    legend([realvalues,predictedvalues], ["Real Values","Predicted Values"])
+    fig.savefig("rvr_model_%f" % time(), format='png')
 
 if __name__ == '__main__':
     svr()

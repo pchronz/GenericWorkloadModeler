@@ -45,26 +45,28 @@ class HMM():
 #        print numbers_zero
 #        targetlist = sortedtrain[(numbers_zero+(numbers_zero/3)):len(sortedtrain)]
         
-#        times = len(sortedtrain)/N
-#        print times
-#        chunk = lambda ulist, step:  map(lambda i: ulist[i:i+step],  xrange(0, len(ulist), step))
+        
+        ## Split the array in equal parts, in order to get the same number of points for each state
+        times = len(sortedtrain)/N
+        print times
+        chunk = lambda ulist, step:  map(lambda i: ulist[i:i+step],  xrange(0, len(ulist), step))
+        
+        tempB = chunk(sortedtrain, times)
+        
+#        maxvalue = max(sortedtrain)
+#        unit = int(maxvalue/N)
 #        
-#        tempB = chunk(targetlist, times)
-        
-        maxvalue = max(sortedtrain)
-        unit = int(maxvalue/N)
-        
-        tempB = []
-        print "Maxvalue = %d" % maxvalue
-        print "Unit is %d" % unit
-        for i in range(N):
-            tempB.append([])
-            
-        for value in sortedtrain:
-            if value/unit >= N:
-                tempB[N-1].append(value)
-            else:
-                tempB[value/unit].append(value)
+#        tempB = []
+#        print "Maxvalue = %d" % maxvalue
+#        print "Unit is %d" % unit
+#        for i in range(N):
+#            tempB.append([])
+#            
+#        for value in sortedtrain:
+#            if value/unit >= N:
+#                tempB[N-1].append(value)
+#            else:
+#                tempB[value/unit].append(value)
    
         
 #        tempB = traintarget[0:(numbers_zero+(numbers_zero/3))]+tempB

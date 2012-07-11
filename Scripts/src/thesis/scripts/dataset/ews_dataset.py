@@ -10,9 +10,9 @@ import datetime
 
 def main(filepath):
     
-    logfile = csv.reader(open(filepath, 'rb'), delimiter=',', quotechar='"')
+    logfile = csv.reader(open(filepath, 'rb'), delimiter=';', quotechar='"')
     
-    streamout = csv.writer(open('ews_article.csv', 'wb'), dialect=csv.excel, delimiter=';')
+    streamout = csv.writer(open('ews_article2.csv', 'wb'), dialect=csv.excel, delimiter=';')
     streamerror = csv.writer(open('missed_lines', 'wb'), delimiter=';')
     
     count = 0

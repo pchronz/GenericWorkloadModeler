@@ -8,7 +8,7 @@ from matplotlib.pyplot import figure, show
 from thesis.scripts.dataset.epoch import toepoch
 import datetime
 from numpy import zeros
-def aggregatebymins(points):
+def aggregatebymins_avg(points):
     
     mon = [0]*1440
     tue = [0]*1440
@@ -37,14 +37,14 @@ def aggregatebymins(points):
     fig = figure()
     ax1 = fig.add_subplot(1,1,1)
     ax1.scatter(input, target, linewidths = 1.0)
-    ax1.axis([0,10080,0,1900])
+    ax1.axis([0,10080,0,max(target)+50])
     ax1.set_xlabel('minute of the week')
     ax1.set_ylabel('Number of requests')
     show()
     
     return input, target
 
-def aggregatebymins_sg(timestamps):
+def aggregatebymins_sg_avg(timestamps):
     
     mon = [0]*1440
     tue = [0]*1440
@@ -82,7 +82,7 @@ def aggregatebymins_sg(timestamps):
     
     return input, target
 
-def aggregateby30sec_sg(timestamps):
+def aggregateby30sec_sg_avg(timestamps):
     
     mon = [0]*2880
     tue = [0]*2880
@@ -119,7 +119,7 @@ def aggregateby30sec_sg(timestamps):
     
     return input, target
 
-def aggregateby10mins_sg(timestamps):
+def aggregateby10mins_sg_avg(timestamps):
     
     mon = [0]*144
     tue = [0]*144
@@ -159,7 +159,7 @@ def aggregateby10mins_sg(timestamps):
     
     return x, target
 
-def aggregateby10mins_sg_mean(timestamps, numcluster):
+def aggregateby10mins_sg_mean_avg(timestamps, numcluster):
      
     mon = [0]*144
     tue = [0]*144
@@ -200,7 +200,7 @@ def aggregateby10mins_sg_mean(timestamps, numcluster):
     
     return x, target
 
-def aggregateby10mins_sg_ndata(timestamps, numbercluster):
+def aggregateby10mins_sg_ndata_avg(timestamps, numbercluster):
      
     mon = [0]*144
     tue = [0]*144
@@ -244,7 +244,7 @@ def aggregateby10mins_sg_ndata(timestamps, numbercluster):
 #    show()
     
     return x, target
-def aggregatebymins_sg_ndata(timestamps):
+def aggregatebymins_sg_ndata_avg(timestamps):
      
     mon = [0]*1440
     tue = [0]*1440
@@ -288,7 +288,7 @@ def aggregatebymins_sg_ndata(timestamps):
     
     return x, target
 
-def aggregateby30sec_sg_ndata(timestamps):
+def aggregateby30sec_sg_ndata_avg(timestamps):
      
     mon = [0]*2880
     tue = [0]*2880
@@ -428,3 +428,45 @@ def aggregateby10mins_sg_mcmc_ndata(timestamps, numbercluster):
     fig.savefig("aggregation_cluster_%d" % (numbercluster), format='png')
     
     return target
+
+def aggregatebymins(timestamps):
+    mon = []
+    tue = []
+    wed = []
+    thu = []
+    fri = []
+    sat = []
+    sun = []
+    week = [mon, tue, wed, thu, fri, sat, sun]
+    created = False
+    counter = -1
+    
+    #for the creation of different series for each day of each week a series of 0 is created every Monday for the entire week (1440 times 0)
+    #counter represents the pointer to the current week -> current series
+    for line in timestamps:
+        standarddate = time.gmtime(float(line))
+        dweek = standarddate[6]
+        if dweek == 0 and created == False:
+            mon.append([0]*1440)
+            tue.append([0]*1440)
+            wed.append([0]*1440)
+            thu.append([0]*1440)
+            fri.append([0]*1440)
+            sat.append([0]*1440)
+            sun.append([0]*1440)
+            counter += 1
+            print "array created"
+            created = True
+        elif dweek != 0 and created == True:
+            created = False
+        hour = standarddate[3]
+        minute = standarddate[4]
+        week[dweek] [counter] [(hour * 60) + minute] +=1
+    
+    inp = [inp for inp in range(1440*7)]
+    chunk = lambda ulist, step:  map(lambda i: ulist[i:i+step],  xrange(0, len(ulist), step))
+    
+    inp = chunk(inp,1440)
+    
+    return input, week
+    
