@@ -75,7 +75,7 @@ class HMM():
                 meanB = mean(tb)
                 varB = std(tb)
                 if(varB == 0):
-                    varB = 1.0
+                    varB = 0.01
                 
                 print "mean = %f  var = %f" % (meanB, varB)
             B.append([meanB, varB])

@@ -444,7 +444,7 @@ def aggregatebymins(timestamps):
     #for the creation of different series for each day of each week a series of 0 is created every Monday for the entire week (1440 times 0)
     #counter represents the pointer to the current week -> current series
     for line in timestamps:
-        standarddate = time.gmtime(float(line))
+        standarddate = time.gmtime(float(line)) 
         dweek = standarddate[6]
         if dweek == 0 and created == False:
             mon.append([0]*1440)
@@ -456,8 +456,11 @@ def aggregatebymins(timestamps):
             sun.append([0]*1440)
             counter += 1
             print "array created"
+            print line
             created = True
         elif dweek != 0 and created == True:
+            print "created = False"            
+            print line
             created = False
         hour = standarddate[3]
         minute = standarddate[4]
@@ -466,7 +469,7 @@ def aggregatebymins(timestamps):
     inp = [inp for inp in range(1440*7)]
     chunk = lambda ulist, step:  map(lambda i: ulist[i:i+step],  xrange(0, len(ulist), step))
     
-    inp = chunk(inp,1440)
+    new_inp = chunk(inp,1440)
     
-    return input, week
+    return new_inp, week
     

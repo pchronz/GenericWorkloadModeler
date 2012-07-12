@@ -128,8 +128,8 @@ def initialize_ews():
     
     train, test = train_test(ews, 1313971200.0)
     
-    traininput, traintarget = aggregatebymins(train)
-    testinput, testtarget = aggregatebymins(test)
+    traininput, traintarget = aggregatebymins(sorted(train))
+    testinput, testtarget = aggregatebymins(sorted(test))
     
 #    for i in range(len(testinput)):
 #        testinput[i] += 10080
@@ -183,7 +183,7 @@ def initialize_wmproxy():
     
     
     
-def svr():
+def svr(C, gamma, eps):
     
     #initialization of data wmproxy
     traininput, traintarget, testinput, testtarget = initialize_wmproxy()
@@ -209,9 +209,7 @@ def svr():
     maxtrain = len(traintarget)
     C = max([abs(avg + sigma), abs(avg - sigma)])
     print "C is equal to %f" % C
-    C = 2**32
-    gamma = 2**(-6)
-    eps = 2**(-8)
+
     svr = SVR(traininput[maxtrain-1440:maxtrain], testinput, traintarget[maxtrain-1440:maxtrain],gamma,C,eps,eps)
     
     
@@ -270,27 +268,30 @@ def hmm(states_nuber):
 
     #initialization of EWS data
     traininput, traintarget, testinput, testtarget = initialize_ews()
-    trainelements = len(traintarget)
-#    models = HMM(traintarget, testinput, testtarget, 128, 128, max(traintarget+testtarget))
-    model = HMM(traintarget, states_nuber)
-#    vs = [hmm_req(models[j], target[j], testinput[j], testtarget[j], max(target[j])) for j in range(len(target)-1)]
 
-##    model = hmm(target, testinput, testtarget, 6, 6, max(target))
-#    v = models.hmm_req(traintarget, testinput[0:20], testtarget[0:20], max(traintarget))
-#    counter = 0
+    ## In this case we will try out performance of HMM considering just Monday! We will concatenate all series of data representing Monday workload!
+    ## With EWS service we have three weeks as training and one week as test 
+    trainelements = []
+    
+    for mon in traintarget[0]:
+        trainelements += mon
+    
+    trainelements = log(trainelements)
+    
+    print "Monday training = %s" % trainelements
+    
+    model = HMM(list(trainelements), states_nuber)
+    
+    
+    test = testtarget[0][0]
 #    for i in range(len(testtarget)):
 #            if(testtarget[i] != 0):
 #                testtarget[i] = numpy.log(testtarget[i])
 #            else:
 #                testtarget[i] = 1.0/100000000000
 #
-    states = model.hmm_req(testtarget[0:11], 30)
-#    for v in vs:
-#    lastest_states = [v[i][0][len(v[i][0])-1] for i in range(len(v)-1)]
-#    print lastest_states
-    
-#    states = models.hmm_req(testtarget[0:10], 20)
-#    
+    states = model.hmm_req(test[0:5], 30)
+   
     ttarget = []
     
     print "States2"
@@ -318,13 +319,13 @@ def hmm(states_nuber):
 #    print "maxout %s: " % maxout
      
     
-    x = array(testinput[0:30], dtype=int32)
-    y = array(testtarget[0:30], dtype=int32)
-    xp = array(testinput[0:30], dtype=int32)
+    x = array(testinput[0][0:30], dtype=int32)
+    y = array(log(test[0:30]), dtype=int32)
+    xp = array(testinput[0][0:30], dtype=int32)
     yp = array(minout, dtype=int32)
-    xp1 = array(testinput[0:30], dtype=int32)
+    xp1 = array(testinput[0][0:30], dtype=int32)
     yp1 = array(maxout, dtype=int32)
-    xp2 = array(testinput[0:30], dtype=int32)
+    xp2 = array(testinput[0][0:30], dtype=int32)
     yp2 = array(meanout, dtype=int32)
     fig = figure()
     
