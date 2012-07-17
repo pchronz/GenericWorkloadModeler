@@ -39,7 +39,6 @@ class HMM():
 #                    transition.append(1.0/(N-1))
 #            A.append(transition)     
 #        max+=1
-        sortedtrain = sorted(traintarget)
 #        targetlist = list(set(sortedtrain))
 #        numbers_zero = sortedtrain.count(0)
 #        print numbers_zero
@@ -47,12 +46,19 @@ class HMM():
         
         
         ## Split the array in equal parts, in order to get the same number of points for each state
-        times = len(sortedtrain)/N
-        print times
+#        sortedtrain = sorted(traintarget)
+#        times = len(sortedtrain)/N
+#        print times
+#        chunk = lambda ulist, step:  map(lambda i: ulist[i:i+step],  xrange(0, len(ulist), step))
+#        
+#        tempB = chunk(sortedtrain, times)
+
+        
+        ## Split values by time
+        times = len(traintarget)/N
         chunk = lambda ulist, step:  map(lambda i: ulist[i:i+step],  xrange(0, len(ulist), step))
         
-        tempB = chunk(sortedtrain, times)
-        
+        tempB = chunk(traintarget, times)        
 #        maxvalue = max(sortedtrain)
 #        unit = int(maxvalue/N)
 #        

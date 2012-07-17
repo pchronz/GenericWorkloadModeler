@@ -272,8 +272,9 @@ def hmm(states_nuber):
     ## In this case we will try out performance of HMM considering just Monday! We will concatenate all series of data representing Monday workload!
     ## With EWS service we have three weeks as training and one week as test 
     trainelements = []
+    traintarget_new = zip(*traintarget[0])
     
-    for mon in traintarget[0]:
+    for mon in traintarget_new:
         trainelements += mon
     
     trainelements = log(trainelements)
