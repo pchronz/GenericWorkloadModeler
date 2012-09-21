@@ -11,10 +11,10 @@ import matplotlib.pyplot as plt
 
 
 #[X, label] = weeklydataset_shogun('/home/work/Projects/EclipseProjects/thesis/Scripts/cpu_mod.csv', [0])
-X, label = weeklydataset('/home/claudio/Workloads/WmProxyWL/log_mod.csv', [])
+X, label = weeklydataset('/media/DATA/Thesis/Workloads/GenericWorkloadModeler/workloads/WMproxy/wmpcommon_cmd.csv', [])
 #X = open('/home/work/Projects/EclipseProjects/thesis/Scripts/cpu.csv',)
 
-K = range(2,10)
+K = range(2,3)
 
 labels = list()
 error = list()
@@ -22,7 +22,7 @@ nfound = list()
 cdata = list()
 cmask = list()
 #param = X[5:8]
-parameters = matrix(X)
+#parameters = matrix(X)
 for k in K:
 #    tmplabels, tmperror, tmpnfound = kcluster(parameters, nclusters=k, mask=None, weight=None, transpose=1, npass=1, method='a', dist='e', initialid=None)
 #    tmpcdata, tmpcmask = clustercentroids(parameters, None, tmplabels, 'a', 1)
@@ -33,7 +33,7 @@ for k in K:
 #    cdata.append(tmpcdata)
 #    cmask.append(tmpcmask)
     
-avgWithinSS = [err/parameters.shape[0] for err in error]
+avgWithinSS = [err/X.shape[0] for err in error]
 kIdx=1
 ##### plot ###
 

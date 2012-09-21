@@ -18,126 +18,134 @@ class HMM():
     m = None
     sigma = None
     
-    def __init__(self, traintarget, N):
-        self.sigma = Float()
-        A = []
-        B = []
-        
-#        for i in range(len(traintarget)):
-#            if(traintarget[i] != 0):
-#                traintarget[i] = numpy.log(traintarget[i])
-#            else:
-#                traintarget[i] = 1.0/100000000000
-        
-        
-#        for i in range(N):
-#            transition = []
-#            for j in range(N):
-#                if(i == j):
-#                    transition.append(1.0/10000000)
-#                else:
-#                    transition.append(1.0/(N-1))
-#            A.append(transition)     
-#        max+=1
-#        targetlist = list(set(sortedtrain))
-#        numbers_zero = sortedtrain.count(0)
-#        print numbers_zero
-#        targetlist = sortedtrain[(numbers_zero+(numbers_zero/3)):len(sortedtrain)]
-        
-        
-        ## Split the array in equal parts, in order to get the same number of points for each state
-#        sortedtrain = sorted(traintarget)
-#        times = len(sortedtrain)/N
-#        print times
-#        chunk = lambda ulist, step:  map(lambda i: ulist[i:i+step],  xrange(0, len(ulist), step))
-#        
-#        tempB = chunk(sortedtrain, times)
-
-        
-        ## Split values by time
-        times = len(traintarget)/N
-        chunk = lambda ulist, step:  map(lambda i: ulist[i:i+step],  xrange(0, len(ulist), step))
-        
-        tempB = chunk(traintarget, times)        
-#        maxvalue = max(sortedtrain)
-#        unit = int(maxvalue/N)
-#        
-#        tempB = []
-#        print "Maxvalue = %d" % maxvalue
-#        print "Unit is %d" % unit
-#        for i in range(N):
-#            tempB.append([])
-#            
-#        for value in sortedtrain:
-#            if value/unit >= N:
-#                tempB[N-1].append(value)
-#            else:
-#                tempB[value/unit].append(value)
-   
-        
-#        tempB = traintarget[0:(numbers_zero+(numbers_zero/3))]+tempB
-        for tb in tempB:
-            if len(tb) > 0:
-                meanB = mean(tb)
-                varB = std(tb)
-                if(varB == 0):
-                    varB = 0.01
-                
-                print "mean = %f  var = %f" % (meanB, varB)
-            B.append([meanB, varB])
-        
-        pi = [1.0/N]*N
-        
-        for i in range(len(B)):
-            transition = []
-            for j in range(len(B)):
-                if(i == j):
-                    transition.append(0)
-                else:
-                    transition.append(1.0/(len(B)-1))
-            A.append(transition)
-        
-        
-        print "B = %s" % B
-        
-        self.m = HMMFromMatrices(self.sigma, GaussianDistribution(self.sigma), A, B, pi)
-        trainstart = time.time()
-        train = EmissionSequence(self.sigma, traintarget)
-        self.m.baumWelch(train)
-        trainend = time.time()
-        print 'HMM train time'
-        print trainend - trainstart
-#    def __init__(self, fm_train, testinput, testtarget, N, M, max):
-#        self.sigma = IntegerRange(0, max+1)
-#        
+    '''
+    This constructor is used in case of continuous distribution for emissions
+    '''
+#    def __init__(self, traintarget, N):
+#        self.sigma = Float()
 #        A = []
 #        B = []
-#        print max
-#        for i in range(N):
-#            B.append([0.00001]*(max+1))
-#            emission = []
-#            for i in range(N):
-#                emission.append(1.0/N)
-#            A.append(emission)
-#            
-#        partition = max/N        
-##        max+=1
 #        
-#        disc = 1 - 0.00001 * (max - partition)
+##        for i in range(len(traintarget)):
+##            if(traintarget[i] != 0):
+##                traintarget[i] = numpy.log(traintarget[i])
+##            else:
+##                traintarget[i] = 1.0/100000000000
+#        
+#        
+##        for i in range(N):
+##            transition = []
+##            for j in range(N):
+##                if(i == j):
+##                    transition.append(1.0/10000000)
+##                else:
+##                    transition.append(1.0/(N-1))
+##            A.append(transition)     
+##        max+=1
+##        targetlist = list(set(sortedtrain))
+##        numbers_zero = sortedtrain.count(0)
+##        print numbers_zero
+##        targetlist = sortedtrain[(numbers_zero+(numbers_zero/3)):len(sortedtrain)]
+#        
+#        
+#        ## Split the array in equal parts, in order to get the same number of points for each state
+##        sortedtrain = sorted(traintarget)
+##        times = len(sortedtrain)/N
+##        print times
+##        chunk = lambda ulist, step:  map(lambda i: ulist[i:i+step],  xrange(0, len(ulist), step))
+##        
+##        tempB = chunk(sortedtrain, times)
+#
+#        
+#        ## Split values by time
+#        times = len(traintarget)/N
+#        chunk = lambda ulist, step:  map(lambda i: ulist[i:i+step],  xrange(0, len(ulist), step))
+#        
+#        tempB = chunk(traintarget, times)        
+##        maxvalue = max(sortedtrain)
+##        unit = int(maxvalue/N)
+##        
+##        tempB = []
+##        print "Maxvalue = %d" % maxvalue
+##        print "Unit is %d" % unit
+##        for i in range(N):
+##            tempB.append([])
+##            
+##        for value in sortedtrain:
+##            if value/unit >= N:
+##                tempB[N-1].append(value)
+##            else:
+##                tempB[value/unit].append(value)
+#   
+#        
+##        tempB = traintarget[0:(numbers_zero+(numbers_zero/3))]+tempB
+#        for tb in tempB:
+#            if len(tb) > 0:
+#                meanB = mean(tb)
+#                varB = std(tb)
+#                if(varB == 0):
+#                    varB = 0.01
+#                
+#                print "mean = %f  var = %f" % (meanB, varB)
+#            B.append([meanB, varB])
+#        
+#        pi = [1.0/N]*N
 #        
 #        for i in range(len(B)):
-#            for j in range(max):
-#                if(j >= i*partition) and (j < (i+1)*partition):
-#                    B[i][j] = (disc/partition)
-#                    
-#        pi = [1.0/N]*N
-#        self.m = HMMFromMatrices(self.sigma, DiscreteDistribution(self.sigma), A, B, pi)
-#        train = EmissionSequence(self.sigma, fm_train)
+#            transition = []
+#            for j in range(len(B)):
+#                if(i == j):
+#                    transition.append(0)
+#                else:
+#                    transition.append(1.0/(len(B)-1))
+#            A.append(transition)
+#        
+#        
+#        print "B = %s" % B
+#        
+#        self.m = HMMFromMatrices(self.sigma, GaussianDistribution(self.sigma), A, B, pi)
 #        trainstart = time.time()
+#        train = EmissionSequence(self.sigma, traintarget)
 #        self.m.baumWelch(train)
 #        trainend = time.time()
 #        print 'HMM train time'
 #        print trainend - trainstart
+#        
+        
+    '''
+    This constructor is used in case of discrete distribution of emissions
+    '''
+    def __init__(self, fm_train, N, max):
+        self.sigma = IntegerRange(0, max+1)
+        
+        A = []
+        B = []
+        print max
+        for i in range(N):
+            B.append([0.00001]*(max+1))
+            emission = []
+            for i in range(N):
+                emission.append(1.0/N)
+            A.append(emission)
+            
+        partition = max/N        
+#        max+=1
+        
+        disc = 1 - 0.00001 * (max - partition)
+        
+        for i in range(len(B)):
+            for j in range(max):
+                if(j >= i*partition) and (j < (i+1)*partition):
+                    B[i][j] = (disc/partition)
+                    
+        pi = [1.0/N]*N
+        self.m = HMMFromMatrices(self.sigma, DiscreteDistribution(self.sigma), A, B, pi)
+        train = EmissionSequence(self.sigma, fm_train)
+        trainstart = time.time()
+        self.m.baumWelch(train)
+        trainend = time.time()
+        print 'HMM train time'
+        print trainend - trainstart
         
         #delete silent states
     
@@ -216,25 +224,30 @@ class HMM():
 #        return v
     def hmm_req(self, starttest, timewindow):
         teststart = time.time()
+        
+        states = []
         seq = EmissionSequence(self.sigma, starttest)
-        viterbipath = self.m.viterbi(seq)
         
-        A = self.m.asMatrices()[0]
-        states = list(viterbipath[0])
-        print "States"
-        print states
-        laststate = states[len(states)-1]
-        ind = int(laststate)
-        print ind
-        print A[ind].index(max(A[ind]))
-        
-        for i in range(timewindow - len(starttest)):
+        for i in range(timewindow):
+            viterbipath = self.m.viterbi(seq)
+            
+            A = self.m.asMatrices()[0]
+            states = list(viterbipath[0])
+            laststate = states[len(states)]
+            ind = int(laststate)
+            print ind
+            print A[ind].index(max(A[ind]))
+            
             states.append(A[ind].index(max(A[ind])))
             ind = int(states[len(states)-1])
+            
+            seq = EmissionSequence(self.sigma, states[1:len(states)])
         
         testend = time.time()
         print "HMM query response"
         print testend-teststart
+        print "Predicted States"
+        print states[len(states)-timewindow, len(starttest)]
         return states
         
     def sme_calc(self, testtarget, realtarget):

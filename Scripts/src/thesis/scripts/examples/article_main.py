@@ -124,15 +124,21 @@ def train_test(data, date_test):
     
 def initialize_ews():
     
-    ews = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/EWS/ews_article2.csv"), delimiter = ';')
-    
-    train, test = train_test(ews, 1313971200.0)
-    
-    traininput, traintarget = aggregatebymins(sorted(train))
-    testinput, testtarget = aggregatebymins(sorted(test))
-    
+#    ews = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/EWS/ews_article2.csv"), delimiter = ';')
+#    
+#    train, test = train_test(ews, 1313971200.0)
+#    
+#    traininput, traintarget = aggregatebymins(sorted(train))
+#    testinput, testtarget = aggregatebymins(sorted(test))
+#    
 #    for i in range(len(testinput)):
 #        testinput[i] += 10080
+    
+    traininput = range(0,4319)
+    traintarget = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/EWS/percentage_train.csv"), delimiter = ';')
+    testinput = range(0,29)
+    testtarget = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/EWS/percentage_test.csv"), delimiter = ';')
+    
     
     return traininput, traintarget, testinput, testtarget
      
@@ -271,27 +277,27 @@ def hmm(states_nuber):
 
     ## In this case we will try out performance of HMM considering just Monday! We will concatenate all series of data representing Monday workload!
     ## With EWS service we have three weeks as training and one week as test 
-    trainelements = []
-    traintarget_new = zip(*traintarget[0])
+#    trainelements = []
+#    traintarget_new = zip(*traintarget[0])
+#    
+#    for mon in traintarget_new:
+#        trainelements += mon
+#    
+#    trainelements = log(trainelements)
+#    
+#    print "Monday training = %s" % trainelements
     
-    for mon in traintarget_new:
-        trainelements += mon
-    
-    trainelements = log(trainelements)
-    
-    print "Monday training = %s" % trainelements
-    
-    model = HMM(list(trainelements), states_nuber)
+    model = HMM(traintarget, states_nuber, max(traintarget))
     
     
-    test = testtarget[0][0]
+    test = traintarget[0,1439]
 #    for i in range(len(testtarget)):
 #            if(testtarget[i] != 0):
 #                testtarget[i] = numpy.log(testtarget[i])
 #            else:
 #                testtarget[i] = 1.0/100000000000
 #
-    states = model.hmm_req(test[0:5], 30)
+    states = model.hmm_req(test, 30)
    
     ttarget = []
     
