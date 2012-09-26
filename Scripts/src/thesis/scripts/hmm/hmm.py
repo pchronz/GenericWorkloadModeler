@@ -6,6 +6,7 @@ Created on Sep 26, 2011
 
 from numpy import array, int32, mean, std, zeros
 import numpy
+from collections import Counter
 from ghmm import *
 import types
 import time
@@ -116,30 +117,82 @@ class HMM():
     This constructor is used in case of discrete distribution of emissions
     '''
     def __init__(self, fm_train, N, max):
-        self.sigma = IntegerRange(0, max+1)
+        self.sigma = IntegerRange(1, max+1)
         
         A = []
         B = []
-        print max
         for i in range(N):
-            B.append([0.00001]*(max+1))
-            emission = []
-            for i in range(N):
-                emission.append(1.0/N)
-            A.append(emission)
+            transition = []
+            for j in range(N):
+                if(i == j):
+                    transition.append(1.0/10000000)
+                else:
+                    transition.append(1.0/(N-1))
+            A.append(transition)   
+                
+        # now data are divided in order to obtain a starting emission values for each state.
+        # number of partition basing on the number of states
+        
+        npartition = int(len(fm_train)/N)
+        
+        
+        # for the first N-1 states
+        for i in range(N-1):
+            submatrix = fm_train[i*npartition:((1+i)*npartition)-1]
+            occurrences = Counter(submatrix)
+            emission = [0.0]*(max)
             
-        partition = max/N        
-#        max+=1
+            for key in occurrences.keys():
+                emission[key-1] = occurrences[key-1]
+            
+            
+            emission = array(emission) / (sum(emission))
+            
+            # The matrix is too sparse so an adjustement is needed: all value equal to 0 will be set to 0.0001
+            # and the normal value will be adjusted in order to have th e sum of emission equal to 1!
+            
+            numberofzeros = list(emission).count(0)
+            adjvalue = (numberofzeros * 0.0001) / (emission != 0).sum()
+            
+            for i in range(0,len(emission)):
+                if emission[i] == 0:
+                    emission[i] = 0.0001
+                else:
+                    emission[i] -= adjvalue
+            
+            
+            
+            B.append(list(emission))
         
-        disc = 1 - 0.00001 * (max - partition)
+        # the last state is computed apart because it can have different number of values!
+        submatrix = fm_train[N-1*npartition:len(fm_train)-1]
+        occurrences = Counter(submatrix)
+        emission = [0.0]*(max)
         
-        for i in range(len(B)):
-            for j in range(max):
-                if(j >= i*partition) and (j < (i+1)*partition):
-                    B[i][j] = (disc/partition)
-                    
+        print occurrences
+        
+        for key in occurrences.keys():
+            emission[key-1] = occurrences[key-1]
+        
+        
+        emission = array(emission) / (sum(emission))
+        
+        # The matrix is too sparse so an adjustement is needed: all value equal to 0 will be set to 0.0001
+        # and the normal value will be adjusted in order to have th e sum of emission equal to 1!
+        
+        numberofzeros = list(emission).count(0)
+        adjvalue = numberofzeros * 0.0001 / (emission != 0).sum()
+        
+        for i in range(0,len(emission)):
+            if emission[i] == 0:
+                emission[i] = 0.0001
+            else:
+                emission[i] -= adjvalue
+        
+        B.append(list(emission))
+            
         pi = [1.0/N]*N
-        self.m = HMMFromMatrices(self.sigma, DiscreteDistribution(self.sigma), A, B, pi)
+        self.m = HMMFromMatrices(self.sigma, DiscreteDistribution(self.sigma), A, list(B), pi)
         train = EmissionSequence(self.sigma, fm_train)
         trainstart = time.time()
         self.m.baumWelch(train)
@@ -224,16 +277,19 @@ class HMM():
 #        return v
     def hmm_req(self, starttest, timewindow):
         teststart = time.time()
-        
+        print(starttest)
         states = []
         seq = EmissionSequence(self.sigma, starttest)
         
         for i in range(timewindow):
             viterbipath = self.m.viterbi(seq)
             
+            print "viterbi"
+            print viterbipath
+            
             A = self.m.asMatrices()[0]
             states = list(viterbipath[0])
-            laststate = states[len(states)]
+            laststate = states[len(states)-1]
             ind = int(laststate)
             print ind
             print A[ind].index(max(A[ind]))
@@ -241,14 +297,24 @@ class HMM():
             states.append(A[ind].index(max(A[ind])))
             ind = int(states[len(states)-1])
             
-            seq = EmissionSequence(self.sigma, states[1:len(states)])
+            laststateemission = self.m.getEmission(A[ind].index(max(A[ind])))
+            bestvalue = laststateemission.index(max(laststateemission))
+            print bestvalue
+            starttest.append(bestvalue)
+            
+            starttest = starttest[1:len(starttest)]
+            
+            print starttest
+            
+            seq = EmissionSequence(self.sigma, starttest)
         
         testend = time.time()
         print "HMM query response"
         print testend-teststart
+        predictedstates = states[len(states)-timewindow-1:len(starttest)]
         print "Predicted States"
-        print states[len(states)-timewindow, len(starttest)]
-        return states
+        print predictedstates
+        return predictedstates
         
     def sme_calc(self, testtarget, realtarget):
         result = 0.0

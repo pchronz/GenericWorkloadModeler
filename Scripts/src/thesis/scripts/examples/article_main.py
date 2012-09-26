@@ -135,12 +135,13 @@ def initialize_ews():
 #        testinput[i] += 10080
     
     traininput = range(0,4319)
-    traintarget = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/EWS/percentage_train.csv"), delimiter = ';')
+    train = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/EWS/percentage_train_assign.csv"), delimiter = ';')
+    traintarget = map(operator.itemgetter(0), train)
     testinput = range(0,29)
-    testtarget = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/EWS/percentage_test.csv"), delimiter = ';')
+    test = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/EWS/percentage_test_assign.csv"), delimiter = ';')
+    testtarget = map(operator.itemgetter(0), test)
     
-    
-    return traininput, traintarget, testinput, testtarget
+    return traininput, map(int,traintarget), testinput, map(int,testtarget)
      
 def initialize_wmproxy():
     
@@ -290,7 +291,7 @@ def hmm(states_nuber):
     model = HMM(traintarget, states_nuber, max(traintarget))
     
     
-    test = traintarget[0,1439]
+    test = traintarget[1400:1439]
 #    for i in range(len(testtarget)):
 #            if(testtarget[i] != 0):
 #                testtarget[i] = numpy.log(testtarget[i])
@@ -300,17 +301,16 @@ def hmm(states_nuber):
     states = model.hmm_req(test, 30)
    
     ttarget = []
-    
     print "States2"
     print states
     for state in states:
         li = model.m.getEmission(state)
-        normal = norm.interval(0.15,loc = li[0], scale = li[1])
-        ttarget.append(normal)
-#        counter += 1
+        maxes = nlargest(5, li)
+        maxvals = [li.index(maxval) for maxval in maxes]
+        ttarget.append(maxvals)
 ##    sme = sme_calc(ttarget, testtarget[counter])
-    print ttarget
-    
+#    print ttarget
+#    
     minout = []
     maxout = []
     meanout = []
@@ -326,15 +326,18 @@ def hmm(states_nuber):
 #    print "maxout %s: " % maxout
      
     
-    x = array(testinput[0][0:30], dtype=int32)
-    y = array(log(test[0:30]), dtype=int32)
-    xp = array(testinput[0][0:30], dtype=int32)
-    yp = array(minout, dtype=int32)
-    xp1 = array(testinput[0][0:30], dtype=int32)
-    yp1 = array(maxout, dtype=int32)
-    xp2 = array(testinput[0][0:30], dtype=int32)
-    yp2 = array(meanout, dtype=int32)
+    x = array(testinput[0:29], dtype=int32)
+    y = array(testtarget[0:29], dtype=int32)
+    xp = array(testinput[0:29], dtype=int32)
+    yp = array(minout[0:29], dtype=int32)
+    xp1 = array(testinput[0:29], dtype=int32)
+    yp1 = array(maxout[0:29], dtype=int32)
+    xp2 = array(testinput[0:29], dtype=int32)
+    yp2 = array(meanout[0:29], dtype=int32)
     fig = figure()
+    
+    print "len x = % d" % len(x)
+    print "len y = % d" % len(y)
     
     ax1 = fig.add_subplot(1,1,1)
     ax1.title.set_text("Predizioni modello HMM con %d stati" % (states_nuber))
@@ -346,7 +349,7 @@ def hmm(states_nuber):
     ax1.set_xlabel('minutes of the week')
     ax1.set_ylabel('number of requests')
     legend([realvalues,minpred, avgpred, maxpred], ["Real Values","Minimum Predicted Values","Average Predicted Values","Maximum Predicted Values"])
-#    fig.savefig("hmm_model_%f.png" % time(), format='png')
+    fig.savefig("hmm_model_%f.png" % time(), format='png')
     
 #    sme = model.sme_calc(ttarget, testtarget[10:30])
 #    mape = model.mape_calc(ttarget, testtarget[10:30])
