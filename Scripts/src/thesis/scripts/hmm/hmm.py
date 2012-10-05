@@ -11,6 +11,7 @@ from ghmm import *
 import types
 import time
 from sets import Set
+from numpy.core.numeric import ones
 
 class HMM():
     '''
@@ -121,76 +122,111 @@ class HMM():
         
         A = []
         B = []
-        for i in range(N):
-            transition = []
-            for j in range(N):
-                if(i == j):
-                    transition.append(1.0/10000000)
-                else:
-                    transition.append(1.0/(N-1))
-            A.append(transition)   
+        
+        #Fair transition matrix
+        A = ones([N,N])/(N*1.0)
+#        print A
+        
+        # Not fair transition matrix
+#        for i in range(N):
+#            transition = []
+#            for j in range(N):
+#                if(i == j):
+#                    transition.append(1.0/10000000)
+#                else:
+#                    transition.append(1.0/(N-1))
+#            A.append(transition)   
                 
         # now data are divided in order to obtain a starting emission values for each state.
         # number of partition basing on the number of states
+#        
+#        npartition = int(len(fm_train)/N)
+#        
+#        
+#        # for the first N-1 states
+#        for i in range(N-1):
+#            submatrix = fm_train[i*npartition:((1+i)*npartition)-1]
+#            occurrences = Counter(submatrix)
+#            emission = [0.0]*(max)
+#            
+#            for key in occurrences.keys():
+#                emission[key-1] = occurrences[key-1]
+#            
+#            
+#            emission = array(emission) / (sum(emission))
+#            
+#            # The matrix is too sparse so an adjustement is needed: all value equal to 0 will be set to 0.0001
+#            # and the normal value will be adjusted in order to have th e sum of emission equal to 1!
+#            
+#            numberofzeros = list(emission).count(0)
+#            adjvalue = (numberofzeros * 0.0001) / (emission != 0).sum()
+#            
+#            for i in range(0,len(emission)):
+#                if emission[i] == 0:
+#                    emission[i] = 0.0001
+#                else:
+#                    emission[i] -= adjvalue
+#            
+#            
+#            
+#            B.append(list(emission))
+#        
+#        # the last state is computed apart because it can have different number of values!
+#        submatrix = fm_train[N-1*npartition:len(fm_train)-1]
+#        occurrences = Counter(submatrix)
+#        emission = [0.0]*(max)
+#        
+#        print occurrences
+#        
+#        for key in occurrences.keys():
+#            emission[key-1] = occurrences[key-1]
+#        
+#        
+#        emission = array(emission) / (sum(emission))
+#        
+#        # The matrix is too sparse so an adjustement is needed: all value equal to 0 will be set to 0.0001
+#        # and the normal value will be adjusted in order to have th e sum of emission equal to 1!
+#        
+#        numberofzeros = list(emission).count(0)
+#        adjvalue = numberofzeros * 0.0001 / (emission != 0).sum()
+#        
+#        for i in range(0,len(emission)):
+#            if emission[i] == 0:
+#                emission[i] = 0.0001
+#            else:
+#                emission[i] -= adjvalue
+#        
+#        B.append(list(emission))
+
+
+        # The emission distribution is computed basing on the output range, each state has singl range value where the probability
+        # is equal and the other values have 0.0001 prob percentage
+        B = []
+        partition = int(max/N)
         
-        npartition = int(len(fm_train)/N)
+        # get occurrences of each value
+        occurrences_count = Counter(fm_train)
+        occurrences_prob = zeros(264)
+        
+        for i in occurrences_count.keys():
+            occurrences_prob[i] = occurrences_count[i]
         
         
-        # for the first N-1 states
-        for i in range(N-1):
-            submatrix = fm_train[i*npartition:((1+i)*npartition)-1]
-            occurrences = Counter(submatrix)
-            emission = [0.0]*(max)
-            
-            for key in occurrences.keys():
-                emission[key-1] = occurrences[key-1]
-            
-            
-            emission = array(emission) / (sum(emission))
-            
-            # The matrix is too sparse so an adjustement is needed: all value equal to 0 will be set to 0.0001
-            # and the normal value will be adjusted in order to have th e sum of emission equal to 1!
-            
-            numberofzeros = list(emission).count(0)
-            adjvalue = (numberofzeros * 0.0001) / (emission != 0).sum()
-            
-            for i in range(0,len(emission)):
-                if emission[i] == 0:
-                    emission[i] = 0.0001
-                else:
-                    emission[i] -= adjvalue
-            
-            
-            
-            B.append(list(emission))
+        for i in range(N):
+            emission = ones(max) * 0.0001
+            emission[i*partition:(i+1)*partition] = (occurrences_prob[i*partition:(i+1)*partition]/sum(occurrences_prob[i*partition:(i+1)*partition])) - (((max - partition)*0.0001)/partition)
+            print sum(emission)
+            B.append(emission)
         
-        # the last state is computed apart because it can have different number of values!
-        submatrix = fm_train[N-1*npartition:len(fm_train)-1]
-        occurrences = Counter(submatrix)
-        emission = [0.0]*(max)
+        # Adjusting the NaN values of the emission matrix
+        for i in range(N):
+            if(any(numpy.isnan(B[i]))):
+                B[i]= list(ones(max) / max)
+                
         
-        print occurrences
+         
+        print "B = %s" % B
         
-        for key in occurrences.keys():
-            emission[key-1] = occurrences[key-1]
-        
-        
-        emission = array(emission) / (sum(emission))
-        
-        # The matrix is too sparse so an adjustement is needed: all value equal to 0 will be set to 0.0001
-        # and the normal value will be adjusted in order to have th e sum of emission equal to 1!
-        
-        numberofzeros = list(emission).count(0)
-        adjvalue = numberofzeros * 0.0001 / (emission != 0).sum()
-        
-        for i in range(0,len(emission)):
-            if emission[i] == 0:
-                emission[i] = 0.0001
-            else:
-                emission[i] -= adjvalue
-        
-        B.append(list(emission))
-            
         pi = [1.0/N]*N
         self.m = HMMFromMatrices(self.sigma, DiscreteDistribution(self.sigma), A, list(B), pi)
         train = EmissionSequence(self.sigma, fm_train)
@@ -291,8 +327,6 @@ class HMM():
             states = list(viterbipath[0])
             laststate = states[len(states)-1]
             ind = int(laststate)
-            print ind
-            print A[ind].index(max(A[ind]))
             
             states.append(A[ind].index(max(A[ind])))
             ind = int(states[len(states)-1])
@@ -302,16 +336,15 @@ class HMM():
             print bestvalue
             starttest.append(bestvalue)
             
-            starttest = starttest[1:len(starttest)]
+            newtest = starttest[1:len(starttest)]
             
-            print starttest
             
-            seq = EmissionSequence(self.sigma, starttest)
+            seq = EmissionSequence(self.sigma, newtest)
         
         testend = time.time()
         print "HMM query response"
         print testend-teststart
-        predictedstates = states[len(states)-timewindow-1:len(starttest)]
+        predictedstates = states[len(states)-timewindow:len(states)]
         print "Predicted States"
         print predictedstates
         return predictedstates

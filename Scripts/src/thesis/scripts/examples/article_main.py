@@ -28,6 +28,10 @@ import numpy
 import operator
 import rvm_binding
 
+from ghmm import EmissionSequence
+from numpy.core.numeric import dtype
+from numpy.ma.core import absolute
+
 def divide_by_cmd(filename1, filename2, position):
     X, label = weeklydataset(filename1, [])
     X2, label2 = weeklydataset(filename2, [])
@@ -133,15 +137,19 @@ def initialize_ews():
 #    
 #    for i in range(len(testinput)):
 #        testinput[i] += 10080
+    pred_test = []
+    traininput = range(0,1439)
+    train = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/EWS/train_data.csv"), delimiter = ',')
+    traintarget = []
+    for row in train:
+        traintarget.append(row[1])
+        pred_test.append(row[2])
     
-    traininput = range(0,4319)
-    train = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/EWS/percentage_train_assign.csv"), delimiter = ';')
-    traintarget = map(operator.itemgetter(0), train)
     testinput = range(0,29)
-    test = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/EWS/percentage_test_assign.csv"), delimiter = ';')
+    test = csv.reader(open("/home/claudio/GenericWorkloadModeler/workloads/EWS/percentage_test_assign_3m.csv"), delimiter = ',')
     testtarget = map(operator.itemgetter(0), test)
     
-    return traininput, map(int,traintarget), testinput, map(int,testtarget)
+    return traininput, map(int,traintarget),map(int,pred_test), testinput, map(int,testtarget)
      
 def initialize_wmproxy():
     
@@ -274,7 +282,7 @@ def hmm(states_nuber):
 #    traininput, traintarget, testinput, testtarget = initialize_wmproxy()
 
     #initialization of EWS data
-    traininput, traintarget, testinput, testtarget = initialize_ews()
+    traininput, traintarget, pred_test, testinput, testtarget = initialize_ews()
 
     ## In this case we will try out performance of HMM considering just Monday! We will concatenate all series of data representing Monday workload!
     ## With EWS service we have three weeks as training and one week as test 
@@ -287,25 +295,40 @@ def hmm(states_nuber):
 #    trainelements = log(trainelements)
 #    
 #    print "Monday training = %s" % trainelements
+    model = HMM(traintarget, states_nuber, 264)
     
-    model = HMM(traintarget, states_nuber, max(traintarget))
     
-    
-    test = traintarget[1400:1439]
+    test = pred_test[0:5]
+#    test = traintarget[1370:1409]
 #    for i in range(len(testtarget)):
 #            if(testtarget[i] != 0):
 #                testtarget[i] = numpy.log(testtarget[i])
 #            else:
 #                testtarget[i] = 1.0/100000000000
 #
+#    
+#    This function predict a timewindow X startinf from a test sequence
     states = model.hmm_req(test, 30)
    
+#    This function is for the integrity check of the model (how it fit the training set)
+#    seq = EmissionSequence(model.sigma, traintarget)
+#    states = model.m.viterbi(seq)
+#    states = states[0]
+
+
+
     ttarget = []
     print "States2"
     print states
+    meanout = []
     for state in states:
         li = model.m.getEmission(state)
+#        maxes = numpy.where(array(li) > max(li)*0.4)[0]
+#        print maxes
+#        meanout.append(li.index(li[max(maxes)]))
+#        maxvals = [li.index(li[maxval]) for maxval in maxes]
         maxes = nlargest(5, li)
+        meanout.append(li.index(maxes[0]))
         maxvals = [li.index(maxval) for maxval in maxes]
         ttarget.append(maxvals)
 ##    sme = sme_calc(ttarget, testtarget[counter])
@@ -313,27 +336,25 @@ def hmm(states_nuber):
 #    
     minout = []
     maxout = []
-    meanout = []
     
     for element in ttarget:
         minout.append(min(element))
         maxout.append(max(element))
-        meanout.append(mean(element))
         
-    
+    print len(meanout)
 #    print "minout %s: " % minout
 #    print "meanout %s: " % meanout
 #    print "maxout %s: " % maxout
      
     
-    x = array(testinput[0:29], dtype=int32)
-    y = array(testtarget[0:29], dtype=int32)
-    xp = array(testinput[0:29], dtype=int32)
-    yp = array(minout[0:29], dtype=int32)
-    xp1 = array(testinput[0:29], dtype=int32)
-    yp1 = array(maxout[0:29], dtype=int32)
-    xp2 = array(testinput[0:29], dtype=int32)
-    yp2 = array(meanout[0:29], dtype=int32)
+    x = array(traininput, dtype=int32)
+    y = array(traintarget, dtype=int32)
+    xp = array(traininput, dtype=int32)
+    yp = array(minout, dtype=int32)
+    xp1 = array(traininput, dtype=int32)
+    yp1 = array(maxout, dtype=int32)
+    xp2 = array(traininput, dtype=int32)
+    yp2 = array(meanout, dtype=int32)
     fig = figure()
     
     print "len x = % d" % len(x)
@@ -342,14 +363,14 @@ def hmm(states_nuber):
     ax1 = fig.add_subplot(1,1,1)
     ax1.title.set_text("Predizioni modello HMM con %d stati" % (states_nuber))
     realvalues = ax1.plot(x, y)
-    minpred = ax1.plot(xp,yp,"r")
+#    minpred = ax1.plot(xp,yp,"r")
     maxpred = ax1.plot(xp1,yp1,"g")
     avgpred = ax1.plot(xp2,yp2,"y")
 #    ax1.axis([8.9,max(xp)+0.5,0,max(y)+10])
     ax1.set_xlabel('minutes of the week')
-    ax1.set_ylabel('number of requests')
-    legend([realvalues,minpred, avgpred, maxpred], ["Real Values","Minimum Predicted Values","Average Predicted Values","Maximum Predicted Values"])
-    fig.savefig("hmm_model_%f.png" % time(), format='png')
+    ax1.set_ylabel('cluster')
+    legend([realvalues, avgpred, maxpred], ["Real Values","Average Predicted Values","Maximum Predicted Values"])
+#    fig.savefig("hmm_model_%f.png" % time(), format='png')
     
 #    sme = model.sme_calc(ttarget, testtarget[10:30])
 #    mape = model.mape_calc(ttarget, testtarget[10:30])
@@ -361,8 +382,35 @@ def hmm(states_nuber):
 #    print "R^2 = %f" % rsq
 #    print "PREDX = %f" % predx
     
-    return model
     
+    # Compute the error of the on the worst case and the most probable value of the probabilities
+    max_error = []
+    mean_error = []
+    
+    for i in range(len(maxout)):
+        max_error.append(maxout[i] - traintarget[i])
+        mean_error.append(meanout[i] - traintarget[i])
+    
+    fig2 = figure()
+    
+    ax = fig2.add_subplot(1,1,1)
+    ax.title.set_text("Errore rispetto alle predizioni: worst case e most probable (%d Stati)" % (states_nuber))
+    maxerr = ax.plot(x,array(max_error, dtype=int32))
+    meanerr = ax.plot(x,array(mean_error, dtype=int32))
+    
+    legend([maxerr, meanerr], ["WC error", "MP error"])
+    
+    print "Mean WC error"
+    print mean(max_error)
+    print "Mean WC error (abs)"
+    print mean(absolute(max_error))
+    print "Mean MP error"
+    print mean(mean_error)
+    print "Mean MP error (abs)"
+    print mean(absolute(mean_error))
+    print "Number of underestimations"
+    print len(numpy.where(array(max_error) < 0)[0])
+    return model
 def mcmc():
     
     
@@ -496,4 +544,4 @@ def rvr():
     fig.savefig("rvr_model_%f" % time(), format='png')
 
 if __name__ == '__main__':
-    svr()
+    hmm(66)
