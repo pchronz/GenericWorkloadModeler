@@ -124,7 +124,7 @@ class HMM():
         B = []
         
         #Fair transition matrix
-        A = ones([N,N])/(N*1.0)
+        A = ones([37,37])/(37*1.0)
 #        print A
         
         # Not fair transition matrix
@@ -204,30 +204,54 @@ class HMM():
         B = []
         partition = int(max/N)
         
-        # get occurrences of each value
+#         get occurrences of each value
         occurrences_count = Counter(fm_train)
         occurrences_prob = zeros(264)
+        
         
         for i in occurrences_count.keys():
             occurrences_prob[i] = occurrences_count[i]
         
+        # the first state is an outlier and it is treated separately
+        emission = zeros(max)
+        emission[1:68] = occurrences_prob[1:68]/sum(occurrences_prob[1:68])
+        B.append(emission)
         
-        for i in range(N):
+        for i in range(18,53):
             emission = ones(max) * 0.0001
             emission[i*partition:(i+1)*partition] = (occurrences_prob[i*partition:(i+1)*partition]/sum(occurrences_prob[i*partition:(i+1)*partition])) - (((max - partition)*0.0001)/partition)
             print sum(emission)
             B.append(emission)
         
-        # Adjusting the NaN values of the emission matrix
-        for i in range(N):
-            if(any(numpy.isnan(B[i]))):
-                B[i]= list(ones(max) / max)
-                
+        
+        # last state is an outlier too
+        emission = zeros(max)
+        emission[209:264] = occurrences_prob[209:264]/sum(occurrences_prob[209:264])
+        B.append(emission)        
+        
+        
+#        # Adjusting the NaN values of the emission matrix
+#        for i in range(N):
+#            if(any(numpy.isnan(B[i]))):
+#                B[i]= list(ones(max) / max)
+#                
+        
+        
+#        adj_prob = (1-((max-partition)*0.0001))/partition
+        
+        
+        
+#        for i in range(N):
+#            emission = ones(max)*0.0001
+#            emission[i*partition:(i+1)*partition] = adj_prob
+#            print sum(emission)
+#            B.append(emission)
+        
         
          
         print "B = %s" % B
         
-        pi = [1.0/N]*N
+        pi = [1.0/37]*37
         self.m = HMMFromMatrices(self.sigma, DiscreteDistribution(self.sigma), A, list(B), pi)
         train = EmissionSequence(self.sigma, fm_train)
         trainstart = time.time()

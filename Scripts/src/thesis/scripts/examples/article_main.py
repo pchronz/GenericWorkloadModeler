@@ -298,7 +298,7 @@ def hmm(states_nuber):
     model = HMM(traintarget, states_nuber, 264)
     
     
-    test = pred_test[0:5]
+    test = pred_test[0:4]
 #    test = traintarget[1370:1409]
 #    for i in range(len(testtarget)):
 #            if(testtarget[i] != 0):
@@ -347,13 +347,13 @@ def hmm(states_nuber):
 #    print "maxout %s: " % maxout
      
     
-    x = array(traininput, dtype=int32)
-    y = array(traintarget, dtype=int32)
-    xp = array(traininput, dtype=int32)
+    x = array(traininput[0:30], dtype=int32)
+    y = array(pred_test[5:35], dtype=int32)
+    xp = array(traininput[0:30], dtype=int32)
     yp = array(minout, dtype=int32)
-    xp1 = array(traininput, dtype=int32)
+    xp1 = array(traininput[0:30], dtype=int32)
     yp1 = array(maxout, dtype=int32)
-    xp2 = array(traininput, dtype=int32)
+    xp2 = array(traininput[0:30], dtype=int32)
     yp2 = array(meanout, dtype=int32)
     fig = figure()
     
@@ -363,13 +363,13 @@ def hmm(states_nuber):
     ax1 = fig.add_subplot(1,1,1)
     ax1.title.set_text("Predizioni modello HMM con %d stati" % (states_nuber))
     realvalues = ax1.plot(x, y)
-#    minpred = ax1.plot(xp,yp,"r")
+    minpred = ax1.plot(xp,yp,"r")
     maxpred = ax1.plot(xp1,yp1,"g")
     avgpred = ax1.plot(xp2,yp2,"y")
 #    ax1.axis([8.9,max(xp)+0.5,0,max(y)+10])
     ax1.set_xlabel('minutes of the week')
     ax1.set_ylabel('cluster')
-    legend([realvalues, avgpred, maxpred], ["Real Values","Average Predicted Values","Maximum Predicted Values"])
+    legend([realvalues, minpred, avgpred, maxpred], ["Real Values", "Minimum Predicted Values","Average Predicted Values","Maximum Predicted Values"])
 #    fig.savefig("hmm_model_%f.png" % time(), format='png')
     
 #    sme = model.sme_calc(ttarget, testtarget[10:30])
@@ -410,7 +410,7 @@ def hmm(states_nuber):
     print mean(absolute(mean_error))
     print "Number of underestimations"
     print len(numpy.where(array(max_error) < 0)[0])
-    return model
+    return model, pred_test
 def mcmc():
     
     
